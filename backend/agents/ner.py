@@ -11,7 +11,7 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=API_KEY)
 
 INPUT_FILE = "parsed_output_cobol_bank_system_repo.json"
-OUTPUT_FILE = "feature_requirements.json"
+OUTPUT_FILE = "ner_output_cobol_example_1.json"
 CACHE_FILE = "extracted_batch_cache.json"
 
 TOK_LIMIT = 6000  # stay below Gemini 8192
@@ -136,7 +136,7 @@ for i, batch in enumerate(batches):
             match = next((c for c in batch if c["file"] == file and c["chunk_id"] == chunk_id), None)
             if match:
                 item["code"] = match["code"]
-            results.append(item)
+        
 
         
         cache[batch_key] = output_json

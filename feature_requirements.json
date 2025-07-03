@@ -4,13 +4,14 @@
     "chunk_id": 0,
     "language": "COBOL",
     "feature": "File and Data Definition",
-    "description": "Defines the file control parameters for STATEMENT-IN, sets up the data structure for a bank statement movement record (WS-MOVEMENT), and defines a WS-EOF flag to control loop execution.",
+    "description": "This section defines the file control, file section, and working-storage section for processing bank statements. It sets up the input file `statement.data` as an indexed file with random access and defines data structures for storing movement details (value, observation, date) and an end-of-file indicator.",
     "inputs": [],
     "outputs": [],
     "dependencies": [],
     "side_effects": [],
     "requirements": [
-      "The existence of a file named 'input/statement.data'."
+      "An input file named `statement.data` must exist.",
+      "The `statement.data` file must be indexed."
     ],
     "annotations": {
       "comments": null
@@ -21,24 +22,23 @@
     "file": "cloned_repos/Cobol-bank-system\\bankstatement.cbl",
     "chunk_id": 1,
     "language": "COBOL",
-    "feature": "Read Bank Statement Data",
-    "description": "Opens the input file `STATEMENT-IN` and reads records from it into the `WS-MOVEMENT` working storage variable until the end of the file is reached.",
-    "inputs": [],
+    "feature": "Read Input File",
+    "description": "This section opens the `STATEMENT-IN` file for input and reads records from it into the `WS-MOVEMENT` data structure until the end-of-file is reached.  Sets WS-EOF to 'Y' when end of file is detected.",
+    "inputs": [
+      "STATEMENT-IN file"
+    ],
     "outputs": [
-      "WS-MOVEMENT",
-      "WS-EOF"
+      "WS-MOVEMENT variable",
+      "WS-EOF variable"
     ],
-    "dependencies": [
-      "STATEMENT-IN file definition",
-      "WS-MOVEMENT data structure",
-      "WS-EOF flag"
-    ],
+    "dependencies": [],
     "side_effects": [
-      "File read operations"
+      "Reads data from `statement.data`"
     ],
     "requirements": [
-      "The 'input/statement.data' file should exist and be readable.",
-      "The file's records must be compatible with the WS-MOVEMENT structure."
+      "The `STATEMENT-IN` file must be opened before reading.",
+      "`WS-EOF` must be initialized to 'N' before reading.",
+      "The format of the file needs to match the definition of WS-MOVEMENT"
     ],
     "annotations": {
       "comments": null
@@ -49,22 +49,20 @@
     "file": "cloned_repos/Cobol-bank-system\\bankstatement.cbl",
     "chunk_id": 2,
     "language": "COBOL",
-    "feature": "Display Bank Statement and Exit",
-    "description": "Displays the contents of the `WS-MOVEMENT` variable, which holds the last read bank statement movement, and then terminates the program.",
+    "feature": "Display and Termination",
+    "description": "This section displays the contents of the `WS-MOVEMENT` variable and terminates the program.",
     "inputs": [
-      "WS-MOVEMENT"
+      "WS-MOVEMENT variable"
     ],
-    "outputs": [],
-    "dependencies": [
-      "WS-MOVEMENT data structure"
+    "outputs": [
+      "Standard output (console)"
     ],
+    "dependencies": [],
     "side_effects": [
-      "Displays output to console",
-      "Terminates program execution"
+      "Displays data on the console.",
+      "Terminates the program."
     ],
-    "requirements": [
-      "WS-MOVEMENT must contain data read from the statement file."
-    ],
+    "requirements": [],
     "annotations": {
       "comments": null
     },
@@ -74,17 +72,17 @@
     "file": "cloned_repos/Cobol-bank-system\\bankstatementsave.cbl",
     "chunk_id": 1,
     "language": "COBOL",
-    "feature": "Conditional Logic (Incomplete)",
-    "description": "This code segment represents the closing part of an `IF` statement.  Without the `IF` condition, the functionality is not determinable.",
+    "feature": "Conditional Statement",
+    "description": "This is a dangling `END-IF` statement with no corresponding `IF` statement.",
     "inputs": [],
     "outputs": [],
     "dependencies": [],
     "side_effects": [],
     "requirements": [
-      "Requires a preceding IF statement to be syntactically correct."
+      "This code is likely incomplete or has an error.  An `IF` statement should precede the `END-IF`"
     ],
     "annotations": {
-      "comments": "This appears to be the END-IF clause without the associated IF statement.  It does not perform any operation on its own."
+      "comments": "This is likely part of a larger conditional block."
     },
     "code": "END-IF."
   },
@@ -92,17 +90,17 @@
     "file": "cloned_repos/Cobol-bank-system\\bankstatementsave.cbl",
     "chunk_id": 2,
     "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "This code segment represents an exit from a subroutine.",
+    "feature": "Program Termination",
+    "description": "This statement terminates the current program execution.",
     "inputs": [],
     "outputs": [],
     "dependencies": [],
     "side_effects": [
-      "Returns control to the calling program or procedure."
+      "Terminates program execution."
     ],
     "requirements": [],
     "annotations": {
-      "comments": null
+      "comments": "This is a standard way to terminate a COBOL program."
     },
     "code": "goback."
   },
@@ -110,19 +108,17 @@
     "file": "cloned_repos/Cobol-bank-system\\main.cob",
     "chunk_id": 1,
     "language": "COBOL",
-    "feature": "File Processing and Termination",
-    "description": "Closes the `IN-PUT` file and then stops the program execution.",
+    "feature": "File Closing and Program Termination",
+    "description": "This section closes the `IN-PUT` file and terminates the program.",
     "inputs": [],
     "outputs": [],
-    "dependencies": [
-      "IN-PUT file must be opened before closing."
-    ],
+    "dependencies": [],
     "side_effects": [
-      "Closes the input file.",
+      "Closes the `IN-PUT` file.",
       "Terminates the program."
     ],
     "requirements": [
-      "IN-PUT file must be previously opened."
+      "`IN-PUT` must be open before closing."
     ],
     "annotations": {
       "comments": null
@@ -134,17 +130,15 @@
     "chunk_id": 1,
     "language": "COBOL",
     "feature": "File Closing",
-    "description": "Closes the `PEOPLE-IN` file.",
+    "description": "This section closes the `PEOPLE-IN` file.",
     "inputs": [],
     "outputs": [],
-    "dependencies": [
-      "The PEOPLE-IN file must have been opened previously."
-    ],
+    "dependencies": [],
     "side_effects": [
-      "Closes the PEOPLE-IN file."
+      "Closes the `PEOPLE-IN` file."
     ],
     "requirements": [
-      "PEOPLE-IN file must be opened."
+      "`PEOPLE-IN` must be open before closing."
     ],
     "annotations": {
       "comments": null
@@ -155,17 +149,17 @@
     "file": "cloned_repos/Cobol-bank-system\\people.cob",
     "chunk_id": 2,
     "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "Returns control to the calling program or procedure.",
+    "feature": "Program Termination",
+    "description": "This statement terminates the current program execution.",
     "inputs": [],
     "outputs": [],
     "dependencies": [],
     "side_effects": [
-      "Returns control to the caller."
+      "Terminates program execution."
     ],
     "requirements": [],
     "annotations": {
-      "comments": null
+      "comments": "This is a standard way to terminate a COBOL program."
     },
     "code": "goback."
   },
@@ -173,39 +167,31 @@
     "file": "cloned_repos/Cobol-bank-system\\peopleget.cbl",
     "chunk_id": 1,
     "language": "COBOL",
-    "feature": "People Record Retrieval and Existence Check",
-    "description": "This code segment reads CPF from an input file, displays it, opens the PEOPLE-RW file in I-O mode, attempts to read a record from it using the CPF as a key.  It then sets a flag (WS-EXSIST) indicating whether the record was found.  Finally, it opens the EXISTS-RW file in EXTEND mode, writes the WS-EXSIST flag to it, and closes the files.",
+    "feature": "Data Retrieval and File Handling",
+    "description": "This section closes `IN-PUT`, displays `WS-CPF`, opens `PEOPLE-RW` in I-O mode, reads a record based on `WS-CPF`, sets `WS-EXSIST` based on whether the record exists, closes `PEOPLE-RW`, displays `WS-EXSIST`, opens `EXISTS-RW` in EXTEND mode, writes `WS-EXSIST` to `EXISTS-RW-ERROR`, and writes a record to `EXISTS-RW-FILE`.",
     "inputs": [
-      "IN-PUT file (presumably containing CPF)",
-      "PEOPLE-RW file (Indexed file containing people records)",
-      "EXISTS-RW file (file to store the existence flag)"
+      "IN-PUT file",
+      "WS-CPF",
+      "PEOPLE-RW file"
     ],
     "outputs": [
-      "WS-CPF",
       "WS-EXSIST",
-      "EXISTS-RW file"
+      "EXISTS-RW-FILE"
     ],
-    "dependencies": [
-      "File definitions for IN-PUT, PEOPLE-RW, and EXISTS-RW",
-      "Data structures for WS-CPF, PEOPLE-RW-CPF, WS-EXSIST, and EXISTS-RW-ERROR"
-    ],
+    "dependencies": [],
     "side_effects": [
-      "Reads from IN-PUT file",
-      "Opens and closes PEOPLE-RW file in I-O mode",
-      "Reads from PEOPLE-RW file",
-      "Sets the WS-EXSIST flag",
-      "Opens and closes EXISTS-RW file in EXTEND mode",
-      "Writes to EXISTS-RW file",
-      "Displays WS-CPF and WS-EXSIST."
+      "Closes `IN-PUT` file",
+      "Reads data from `PEOPLE-RW` file",
+      "Writes data to `EXISTS-RW-FILE`",
+      "Displays data on the console."
     ],
     "requirements": [
-      "IN-PUT file must exist and be formatted correctly.",
-      "PEOPLE-RW file must be an indexed file.",
-      "EXISTS-RW file must be a sequential file.",
-      "CPF in IN-PUT file must match PEOPLE-RW-CPF key"
+      "`IN-PUT` must be open before closing.",
+      "`PEOPLE-RW` file must be defined with an appropriate key (`PEOPLE-RW-CPF`).",
+      "`EXISTS-RW` must be defined as an external file."
     ],
     "annotations": {
-      "comments": null
+      "comments": "This code performs a lookup in the PEOPLE-RW file and saves a flag indicating existence in another file."
     },
     "code": "END-PERFORM.\n           CLOSE IN-PUT.\n           DISPLAY WS-CPF\n           OPEN I-O PEOPLE-RW\n               MOVE WS-CPF TO PEOPLE-RW-CPF\n               READ PEOPLE-RW\n                   KEY IS PEOPLE-RW-CPF\n                   INVALID KEY MOVE \"0\" TO WS-EXSIST\n                   NOT INVALID KEY MOVE \"1\" TO WS-EXSIST\n               END-READ\n           CLOSE PEOPLE-RW.\n           DISPLAY WS-EXSIST\n           OPEN EXTEND EXISTS-RW.\n               MOVE WS-EXSIST TO EXISTS-RW-ERROR\n               WRITE EXISTS-RW-FILE"
   },
@@ -214,17 +200,15 @@
     "chunk_id": 2,
     "language": "COBOL",
     "feature": "File Closing",
-    "description": "Closes the `EXISTS-RW` file.",
+    "description": "This section closes the `EXISTS-RW` file.",
     "inputs": [],
     "outputs": [],
-    "dependencies": [
-      "The EXISTS-RW file must have been opened previously."
-    ],
+    "dependencies": [],
     "side_effects": [
-      "Closes the EXISTS-RW file."
+      "Closes the `EXISTS-RW` file."
     ],
     "requirements": [
-      "EXISTS-RW file must be opened."
+      "`EXISTS-RW` must be open before closing."
     ],
     "annotations": {
       "comments": null
@@ -235,17 +219,17 @@
     "file": "cloned_repos/Cobol-bank-system\\peopleget.cbl",
     "chunk_id": 3,
     "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "Exits from the current subroutine.",
+    "feature": "Program Termination",
+    "description": "This statement terminates the current program execution.",
     "inputs": [],
     "outputs": [],
     "dependencies": [],
     "side_effects": [
-      "Returns control to the calling routine."
+      "Terminates program execution."
     ],
     "requirements": [],
     "annotations": {
-      "comments": null
+      "comments": "This is a standard way to terminate a COBOL program."
     },
     "code": "goback."
   },
@@ -253,39 +237,32 @@
     "file": "cloned_repos/Cobol-bank-system\\peopleLogin.cbl",
     "chunk_id": 1,
     "language": "COBOL",
-    "feature": "People Login Check",
-    "description": "This code reads a CPF from an input file, displays it, opens the PEOPLE-RW file in I-O mode, attempts to read a record from it using the CPF as a key, and reads the entire record into `WS-PEOPLE-FILE-IN`. It then sets a flag `WS-EXSIST` to indicate whether the record exists. Finally, it opens the `EXISTS-RW` file in EXTEND mode, writes the `WS-EXSIST` flag to it, and prepares to close the files.",
+    "feature": "Login Validation and File Handling",
+    "description": "This section closes `IN-PUT`, displays `WS-CPF`, opens `PEOPLE-RW` in I-O mode, reads a record into `WS-PEOPLE-FILE-IN` based on `WS-CPF`, sets `WS-EXSIST` based on whether the record exists, closes `PEOPLE-RW`, displays `WS-EXSIST`, opens `EXISTS-RW` in EXTEND mode, writes `WS-EXSIST` to `EXISTS-RW-ERROR`, and writes a record to `EXISTS-RW-FILE`.",
     "inputs": [
-      "IN-PUT file (containing CPF)",
-      "PEOPLE-RW file (Indexed file with people records)",
-      "EXISTS-RW file (File to store existence flag)"
+      "IN-PUT file",
+      "WS-CPF",
+      "PEOPLE-RW file"
     ],
     "outputs": [
-      "WS-CPF",
       "WS-EXSIST",
-      "EXISTS-RW file"
+      "EXISTS-RW-FILE"
     ],
-    "dependencies": [
-      "File definitions for IN-PUT, PEOPLE-RW, and EXISTS-RW",
-      "Data structures for WS-CPF, PEOPLE-RW-CPF, WS-EXSIST, WS-PEOPLE-FILE-IN and EXISTS-RW-ERROR"
-    ],
+    "dependencies": [],
     "side_effects": [
-      "Reads from IN-PUT file",
-      "Opens and closes PEOPLE-RW file in I-O mode",
-      "Reads from PEOPLE-RW file into WS-PEOPLE-FILE-IN",
-      "Sets WS-EXSIST flag",
-      "Opens EXISTS-RW file in EXTEND mode",
-      "Writes WS-EXSIST to EXISTS-RW file",
-      "Displays WS-CPF and WS-EXSIST"
+      "Closes `IN-PUT` file",
+      "Reads data from `PEOPLE-RW` file",
+      "Writes data to `EXISTS-RW-FILE`",
+      "Displays data on the console."
     ],
     "requirements": [
-      "IN-PUT file exists and is properly formatted",
-      "PEOPLE-RW file is an indexed file",
-      "EXISTS-RW file is a sequential file",
-      "CPF in IN-PUT file must match PEOPLE-RW-CPF key"
+      "`IN-PUT` must be open before closing.",
+      "`PEOPLE-RW` file must be defined with an appropriate key (`PEOPLE-RW-CPF`).",
+      "`EXISTS-RW` must be defined as an external file.",
+      "WS-PEOPLE-FILE-IN needs to be defined in the data division and be of the correct format to store a record from PEOPLE-RW."
     ],
     "annotations": {
-      "comments": null
+      "comments": "This code performs a login check by looking up a record in the PEOPLE-RW file and saving the existence status to a separate file."
     },
     "code": "END-PERFORM.\n           CLOSE IN-PUT.\n           DISPLAY WS-CPF\n           OPEN I-O PEOPLE-RW\n               MOVE WS-CPF TO PEOPLE-RW-CPF\n               READ PEOPLE-RW INTO WS-PEOPLE-FILE-IN\n                   KEY IS PEOPLE-RW-CPF\n                   INVALID KEY MOVE \"0\" TO WS-EXSIST\n                   NOT INVALID KEY\n                   MOVE \"1\" TO WS-EXSIST\n               END-READ\n           CLOSE PEOPLE-RW.\n           DISPLAY WS-EXSIST\n           OPEN EXTEND EXISTS-RW.\n               MOVE WS-EXSIST TO EXISTS-RW-ERROR\n               WRITE EXISTS-RW-FILE"
   },
@@ -294,17 +271,15 @@
     "chunk_id": 2,
     "language": "COBOL",
     "feature": "File Closing",
-    "description": "Closes the `EXISTS-RW` file.",
+    "description": "This section closes the `EXISTS-RW` file.",
     "inputs": [],
     "outputs": [],
-    "dependencies": [
-      "EXISTS-RW file must be opened"
-    ],
+    "dependencies": [],
     "side_effects": [
-      "Closes the EXISTS-RW file"
+      "Closes the `EXISTS-RW` file."
     ],
     "requirements": [
-      "EXISTS-RW file must be opened prior to this statement."
+      "`EXISTS-RW` must be open before closing."
     ],
     "annotations": {
       "comments": null
@@ -315,17 +290,17 @@
     "file": "cloned_repos/Cobol-bank-system\\peopleLogin.cbl",
     "chunk_id": 3,
     "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "Returns control to the calling program or procedure.",
+    "feature": "Program Termination",
+    "description": "This statement terminates the current program execution.",
     "inputs": [],
     "outputs": [],
     "dependencies": [],
     "side_effects": [
-      "Returns control to the calling routine."
+      "Terminates program execution."
     ],
     "requirements": [],
     "annotations": {
-      "comments": null
+      "comments": "This is a standard way to terminate a COBOL program."
     },
     "code": "goback."
   },
@@ -333,42 +308,33 @@
     "file": "cloned_repos/Cobol-bank-system\\peopleName.cbl",
     "chunk_id": 1,
     "language": "COBOL",
-    "feature": "Retrieve Person's Name by CPF",
-    "description": "This code segment reads a CPF from an input file, displays it, opens the PEOPLE-RW file in I-O mode, attempts to read a record from it using the CPF as a key, and reads the entire record into `WS-PEOPLE-FILE-IN`.  If the record exists, the name from the record is moved to `WS-Nome`. If the record doesn't exist, `WS-Nome` is set to an empty string.  Finally, it opens the `EXISTS-RW` file in EXTEND mode, writes the `WS-Nome` to it, and prepares to close the files.",
+    "feature": "Name Retrieval and File Handling",
+    "description": "This section closes `IN-PUT`, displays `WS-CPF`, opens `PEOPLE-RW` in I-O mode, reads a record into `WS-PEOPLE-FILE-IN` based on `WS-CPF`, sets `WS-Nome` to either blank if invalid key or WS-PEOPLE-FILE-IN-NAME if found, closes `PEOPLE-RW`, displays `WS-Nome`, opens `EXISTS-RW` in EXTEND mode, writes `WS-Nome` to `EXISTS-RW-NAME`, and writes a record to `EXISTS-RW-FILE`.",
     "inputs": [
-      "IN-PUT file (containing CPF)",
-      "PEOPLE-RW file (Indexed file with people records)",
-      "EXISTS-RW file (File to store the person's name)"
+      "IN-PUT file",
+      "WS-CPF",
+      "PEOPLE-RW file"
     ],
     "outputs": [
-      "WS-CPF",
       "WS-Nome",
-      "EXISTS-RW file"
+      "EXISTS-RW-FILE"
     ],
-    "dependencies": [
-      "File definitions for IN-PUT, PEOPLE-RW, and EXISTS-RW",
-      "Data structures for WS-CPF, PEOPLE-RW-CPF, WS-Nome, WS-PEOPLE-FILE-IN and EXISTS-RW-NAME",
-      "WS-PEOPLE-FILE-IN-NAME (field inside WS-PEOPLE-FILE-IN containing the name)"
-    ],
+    "dependencies": [],
     "side_effects": [
-      "Reads from IN-PUT file",
-      "Opens and closes PEOPLE-RW file in I-O mode",
-      "Reads from PEOPLE-RW file into WS-PEOPLE-FILE-IN",
-      "Sets WS-Nome value",
-      "Opens EXISTS-RW file in EXTEND mode",
-      "Writes WS-Nome to EXISTS-RW file",
-      "Displays WS-CPF and WS-Nome"
+      "Closes `IN-PUT` file",
+      "Reads data from `PEOPLE-RW` file",
+      "Writes data to `EXISTS-RW-FILE`",
+      "Displays data on the console."
     ],
     "requirements": [
-      "IN-PUT file exists and is properly formatted",
-      "PEOPLE-RW file is an indexed file",
-      "EXISTS-RW file is a sequential file",
-      "CPF in IN-PUT file must match PEOPLE-RW-CPF key",
-      "WS-PEOPLE-FILE-IN-NAME must be a field in WS-PEOPLE-FILE-IN",
-      "WS-Nome must be large enough to contain the name."
+      "`IN-PUT` must be open before closing.",
+      "`PEOPLE-RW` file must be defined with an appropriate key (`PEOPLE-RW-CPF`).",
+      "`EXISTS-RW` must be defined as an external file.",
+      "WS-PEOPLE-FILE-IN needs to be defined in the data division and be of the correct format to store a record from PEOPLE-RW.",
+      "WS-PEOPLE-FILE-IN-NAME needs to be a valid field within the WS-PEOPLE-FILE-IN record definition."
     ],
     "annotations": {
-      "comments": null
+      "comments": "This code retrieves a person's name based on CPF, storing an empty string if the record is not found and saves the result to a file."
     },
     "code": "END-PERFORM.\n           CLOSE IN-PUT.\n           DISPLAY WS-CPF\n           OPEN I-O PEOPLE-RW\n               MOVE WS-CPF TO PEOPLE-RW-CPF\n               READ PEOPLE-RW into WS-PEOPLE-FILE-IN\n                   KEY IS PEOPLE-RW-CPF\n                   INVALID KEY MOVE \"\" TO WS-Nome\n                  NOT INVALID KEY MOVE WS-PEOPLE-FILE-IN-NAME TO WS-Nome\n               END-READ\n           CLOSE PEOPLE-RW.\n           DISPLAY WS-Nome\n           OPEN EXTEND EXISTS-RW.\n               MOVE WS-Nome TO EXISTS-RW-NAME\n               WRITE EXISTS-RW-FILE"
   },
@@ -377,17 +343,15 @@
     "chunk_id": 2,
     "language": "COBOL",
     "feature": "File Closing",
-    "description": "Closes the `EXISTS-RW` file.",
+    "description": "This section closes the `EXISTS-RW` file.",
     "inputs": [],
     "outputs": [],
-    "dependencies": [
-      "EXISTS-RW file must be opened."
-    ],
+    "dependencies": [],
     "side_effects": [
-      "Closes the EXISTS-RW file."
+      "Closes the `EXISTS-RW` file."
     ],
     "requirements": [
-      "EXISTS-RW file must be opened."
+      "`EXISTS-RW` must be open before closing."
     ],
     "annotations": {
       "comments": null
@@ -398,17 +362,17 @@
     "file": "cloned_repos/Cobol-bank-system\\peopleName.cbl",
     "chunk_id": 3,
     "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "Returns control to the calling program or procedure.",
+    "feature": "Program Termination",
+    "description": "This statement terminates the current program execution.",
     "inputs": [],
     "outputs": [],
     "dependencies": [],
     "side_effects": [
-      "Returns control to the calling routine."
+      "Terminates program execution."
     ],
     "requirements": [],
     "annotations": {
-      "comments": null
+      "comments": "This is a standard way to terminate a COBOL program."
     },
     "code": "goback."
   },
@@ -416,449 +380,19 @@
     "file": "cloned_repos/Cobol-bank-system\\peoplesave.cob",
     "chunk_id": 1,
     "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "This code segment represents an exit from a subroutine.",
+    "feature": "Program Termination",
+    "description": "This statement terminates the current program execution.",
     "inputs": [],
     "outputs": [],
     "dependencies": [],
     "side_effects": [
-      "Returns control to the calling program or procedure."
+      "Terminates program execution."
     ],
     "requirements": [],
     "annotations": {
-      "comments": null
-    },
-    "code": "goback."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\bankstatement.cbl",
-    "chunk_id": 0,
-    "language": "COBOL",
-    "feature": "File and Data Definition",
-    "description": "Defines the file control parameters for STATEMENT-IN, sets up the data structure for a bank statement movement record (WS-MOVEMENT), and defines a WS-EOF flag to control loop execution.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [],
-    "side_effects": [],
-    "requirements": [
-      "The existence of a file named 'input/statement.data'."
-    ],
-    "annotations": {
-      "comments": null
-    },
-    "code": "FILE-CONTROL.\n                    SELECT STATEMENT-IN ASSIGN TO 'input/statement.data'\n                    ORGANIZATION IS INDEXED\n                    ACCESS IS RANDOM.\n\n       DATA DIVISION.\n\n       FILE SECTION.\n\n\n       WORKING-STORAGE SECTION.\n       01 WS-MOVEMENT.\n           05 WS-VALUE PIC 9(10)V9(2).\n           05 WS-OBSERVATION PIC A(255).\n           05 WS-DATE PIC A(8).\n       01 WS-EOF PIC A(1) VALUE 'N'.\n\n\n       PROCEDURE DIVISION."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\bankstatement.cbl",
-    "chunk_id": 1,
-    "language": "COBOL",
-    "feature": "Read Bank Statement Data",
-    "description": "Opens the input file `STATEMENT-IN` and reads records from it into the `WS-MOVEMENT` working storage variable until the end of the file is reached.",
-    "inputs": [],
-    "outputs": [
-      "WS-MOVEMENT",
-      "WS-EOF"
-    ],
-    "dependencies": [
-      "STATEMENT-IN file definition",
-      "WS-MOVEMENT data structure",
-      "WS-EOF flag"
-    ],
-    "side_effects": [
-      "File read operations"
-    ],
-    "requirements": [
-      "The 'input/statement.data' file should exist and be readable.",
-      "The file's records must be compatible with the WS-MOVEMENT structure."
-    ],
-    "annotations": {
-      "comments": null
-    },
-    "code": "STATEMENT-SHOW-PROCEDURE.\n           OPEN INPUT STATEMENT-IN.\n               PERFORM UNTIL WS-EOF = 'Y'\n               READ STATEMENT-IN INTO WS-MOVEMENT\n                    AT END MOVE 'Y' TO WS-EOF"
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\bankstatement.cbl",
-    "chunk_id": 2,
-    "language": "COBOL",
-    "feature": "Display Bank Statement and Exit",
-    "description": "Displays the contents of the `WS-MOVEMENT` variable, which holds the last read bank statement movement, and then terminates the program.",
-    "inputs": [
-      "WS-MOVEMENT"
-    ],
-    "outputs": [],
-    "dependencies": [
-      "WS-MOVEMENT data structure"
-    ],
-    "side_effects": [
-      "Displays output to console",
-      "Terminates program execution"
-    ],
-    "requirements": [
-      "WS-MOVEMENT must contain data read from the statement file."
-    ],
-    "annotations": {
-      "comments": null
-    },
-    "code": "END-PERFORM.\n           DISPLAY WS-MOVEMENT.\n           STOP RUN.\n       END PROGRAM BANK-STATEMENT."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\bankstatementsave.cbl",
-    "chunk_id": 1,
-    "language": "COBOL",
-    "feature": "Conditional Logic (Incomplete)",
-    "description": "This code segment represents the closing part of an `IF` statement.  Without the `IF` condition, the functionality is not determinable.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [],
-    "side_effects": [],
-    "requirements": [
-      "Requires a preceding IF statement to be syntactically correct."
-    ],
-    "annotations": {
-      "comments": "This appears to be the END-IF clause without the associated IF statement.  It does not perform any operation on its own."
-    },
-    "code": "END-IF."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\bankstatementsave.cbl",
-    "chunk_id": 2,
-    "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "This code segment represents an exit from a subroutine.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [],
-    "side_effects": [
-      "Returns control to the calling program or procedure."
-    ],
-    "requirements": [],
-    "annotations": {
-      "comments": null
-    },
-    "code": "goback."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\main.cob",
-    "chunk_id": 1,
-    "language": "COBOL",
-    "feature": "File Processing and Termination",
-    "description": "Closes the `IN-PUT` file and then stops the program execution.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [
-      "IN-PUT file must be opened before closing."
-    ],
-    "side_effects": [
-      "Closes the input file.",
-      "Terminates the program."
-    ],
-    "requirements": [
-      "IN-PUT file must be previously opened."
-    ],
-    "annotations": {
-      "comments": null
-    },
-    "code": "END-PERFORM.\n           CLOSE IN-PUT.\n           STOP RUN."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\people.cob",
-    "chunk_id": 1,
-    "language": "COBOL",
-    "feature": "File Closing",
-    "description": "Closes the `PEOPLE-IN` file.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [
-      "The PEOPLE-IN file must have been opened previously."
-    ],
-    "side_effects": [
-      "Closes the PEOPLE-IN file."
-    ],
-    "requirements": [
-      "PEOPLE-IN file must be opened."
-    ],
-    "annotations": {
-      "comments": null
-    },
-    "code": "END-PERFORM.\n           CLOSE PEOPLE-IN."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\people.cob",
-    "chunk_id": 2,
-    "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "Returns control to the calling program or procedure.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [],
-    "side_effects": [
-      "Returns control to the caller."
-    ],
-    "requirements": [],
-    "annotations": {
-      "comments": null
-    },
-    "code": "goback."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\peopleget.cbl",
-    "chunk_id": 1,
-    "language": "COBOL",
-    "feature": "People Record Retrieval and Existence Check",
-    "description": "This code segment reads CPF from an input file, displays it, opens the PEOPLE-RW file in I-O mode, attempts to read a record from it using the CPF as a key.  It then sets a flag (WS-EXSIST) indicating whether the record was found.  Finally, it opens the EXISTS-RW file in EXTEND mode, writes the WS-EXSIST flag to it, and closes the files.",
-    "inputs": [
-      "IN-PUT file (presumably containing CPF)",
-      "PEOPLE-RW file (Indexed file containing people records)",
-      "EXISTS-RW file (file to store the existence flag)"
-    ],
-    "outputs": [
-      "WS-CPF",
-      "WS-EXSIST",
-      "EXISTS-RW file"
-    ],
-    "dependencies": [
-      "File definitions for IN-PUT, PEOPLE-RW, and EXISTS-RW",
-      "Data structures for WS-CPF, PEOPLE-RW-CPF, WS-EXSIST, and EXISTS-RW-ERROR"
-    ],
-    "side_effects": [
-      "Reads from IN-PUT file",
-      "Opens and closes PEOPLE-RW file in I-O mode",
-      "Reads from PEOPLE-RW file",
-      "Sets the WS-EXSIST flag",
-      "Opens and closes EXISTS-RW file in EXTEND mode",
-      "Writes to EXISTS-RW file",
-      "Displays WS-CPF and WS-EXSIST."
-    ],
-    "requirements": [
-      "IN-PUT file must exist and be formatted correctly.",
-      "PEOPLE-RW file must be an indexed file.",
-      "EXISTS-RW file must be a sequential file.",
-      "CPF in IN-PUT file must match PEOPLE-RW-CPF key"
-    ],
-    "annotations": {
-      "comments": null
-    },
-    "code": "END-PERFORM.\n           CLOSE IN-PUT.\n           DISPLAY WS-CPF\n           OPEN I-O PEOPLE-RW\n               MOVE WS-CPF TO PEOPLE-RW-CPF\n               READ PEOPLE-RW\n                   KEY IS PEOPLE-RW-CPF\n                   INVALID KEY MOVE \"0\" TO WS-EXSIST\n                   NOT INVALID KEY MOVE \"1\" TO WS-EXSIST\n               END-READ\n           CLOSE PEOPLE-RW.\n           DISPLAY WS-EXSIST\n           OPEN EXTEND EXISTS-RW.\n               MOVE WS-EXSIST TO EXISTS-RW-ERROR\n               WRITE EXISTS-RW-FILE"
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\peopleget.cbl",
-    "chunk_id": 2,
-    "language": "COBOL",
-    "feature": "File Closing",
-    "description": "Closes the `EXISTS-RW` file.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [
-      "The EXISTS-RW file must have been opened previously."
-    ],
-    "side_effects": [
-      "Closes the EXISTS-RW file."
-    ],
-    "requirements": [
-      "EXISTS-RW file must be opened."
-    ],
-    "annotations": {
-      "comments": null
-    },
-    "code": "END-WRITE.\n           CLOSE EXISTS-RW."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\peopleget.cbl",
-    "chunk_id": 3,
-    "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "Exits from the current subroutine.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [],
-    "side_effects": [
-      "Returns control to the calling routine."
-    ],
-    "requirements": [],
-    "annotations": {
-      "comments": null
-    },
-    "code": "goback."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\peopleLogin.cbl",
-    "chunk_id": 1,
-    "language": "COBOL",
-    "feature": "People Login Check",
-    "description": "This code reads a CPF from an input file, displays it, opens the PEOPLE-RW file in I-O mode, attempts to read a record from it using the CPF as a key, and reads the entire record into `WS-PEOPLE-FILE-IN`. It then sets a flag `WS-EXSIST` to indicate whether the record exists. Finally, it opens the `EXISTS-RW` file in EXTEND mode, writes the `WS-EXSIST` flag to it, and prepares to close the files.",
-    "inputs": [
-      "IN-PUT file (containing CPF)",
-      "PEOPLE-RW file (Indexed file with people records)",
-      "EXISTS-RW file (File to store existence flag)"
-    ],
-    "outputs": [
-      "WS-CPF",
-      "WS-EXSIST",
-      "EXISTS-RW file"
-    ],
-    "dependencies": [
-      "File definitions for IN-PUT, PEOPLE-RW, and EXISTS-RW",
-      "Data structures for WS-CPF, PEOPLE-RW-CPF, WS-EXSIST, WS-PEOPLE-FILE-IN and EXISTS-RW-ERROR"
-    ],
-    "side_effects": [
-      "Reads from IN-PUT file",
-      "Opens and closes PEOPLE-RW file in I-O mode",
-      "Reads from PEOPLE-RW file into WS-PEOPLE-FILE-IN",
-      "Sets WS-EXSIST flag",
-      "Opens EXISTS-RW file in EXTEND mode",
-      "Writes WS-EXSIST to EXISTS-RW file",
-      "Displays WS-CPF and WS-EXSIST"
-    ],
-    "requirements": [
-      "IN-PUT file exists and is properly formatted",
-      "PEOPLE-RW file is an indexed file",
-      "EXISTS-RW file is a sequential file",
-      "CPF in IN-PUT file must match PEOPLE-RW-CPF key"
-    ],
-    "annotations": {
-      "comments": null
-    },
-    "code": "END-PERFORM.\n           CLOSE IN-PUT.\n           DISPLAY WS-CPF\n           OPEN I-O PEOPLE-RW\n               MOVE WS-CPF TO PEOPLE-RW-CPF\n               READ PEOPLE-RW INTO WS-PEOPLE-FILE-IN\n                   KEY IS PEOPLE-RW-CPF\n                   INVALID KEY MOVE \"0\" TO WS-EXSIST\n                   NOT INVALID KEY\n                   MOVE \"1\" TO WS-EXSIST\n               END-READ\n           CLOSE PEOPLE-RW.\n           DISPLAY WS-EXSIST\n           OPEN EXTEND EXISTS-RW.\n               MOVE WS-EXSIST TO EXISTS-RW-ERROR\n               WRITE EXISTS-RW-FILE"
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\peopleLogin.cbl",
-    "chunk_id": 2,
-    "language": "COBOL",
-    "feature": "File Closing",
-    "description": "Closes the `EXISTS-RW` file.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [
-      "EXISTS-RW file must be opened"
-    ],
-    "side_effects": [
-      "Closes the EXISTS-RW file"
-    ],
-    "requirements": [
-      "EXISTS-RW file must be opened prior to this statement."
-    ],
-    "annotations": {
-      "comments": null
-    },
-    "code": "END-WRITE.\n           CLOSE EXISTS-RW."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\peopleLogin.cbl",
-    "chunk_id": 3,
-    "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "Returns control to the calling program or procedure.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [],
-    "side_effects": [
-      "Returns control to the calling routine."
-    ],
-    "requirements": [],
-    "annotations": {
-      "comments": null
-    },
-    "code": "goback."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\peopleName.cbl",
-    "chunk_id": 1,
-    "language": "COBOL",
-    "feature": "Retrieve Person's Name by CPF",
-    "description": "This code segment reads a CPF from an input file, displays it, opens the PEOPLE-RW file in I-O mode, attempts to read a record from it using the CPF as a key, and reads the entire record into `WS-PEOPLE-FILE-IN`.  If the record exists, the name from the record is moved to `WS-Nome`. If the record doesn't exist, `WS-Nome` is set to an empty string.  Finally, it opens the `EXISTS-RW` file in EXTEND mode, writes the `WS-Nome` to it, and prepares to close the files.",
-    "inputs": [
-      "IN-PUT file (containing CPF)",
-      "PEOPLE-RW file (Indexed file with people records)",
-      "EXISTS-RW file (File to store the person's name)"
-    ],
-    "outputs": [
-      "WS-CPF",
-      "WS-Nome",
-      "EXISTS-RW file"
-    ],
-    "dependencies": [
-      "File definitions for IN-PUT, PEOPLE-RW, and EXISTS-RW",
-      "Data structures for WS-CPF, PEOPLE-RW-CPF, WS-Nome, WS-PEOPLE-FILE-IN and EXISTS-RW-NAME",
-      "WS-PEOPLE-FILE-IN-NAME (field inside WS-PEOPLE-FILE-IN containing the name)"
-    ],
-    "side_effects": [
-      "Reads from IN-PUT file",
-      "Opens and closes PEOPLE-RW file in I-O mode",
-      "Reads from PEOPLE-RW file into WS-PEOPLE-FILE-IN",
-      "Sets WS-Nome value",
-      "Opens EXISTS-RW file in EXTEND mode",
-      "Writes WS-Nome to EXISTS-RW file",
-      "Displays WS-CPF and WS-Nome"
-    ],
-    "requirements": [
-      "IN-PUT file exists and is properly formatted",
-      "PEOPLE-RW file is an indexed file",
-      "EXISTS-RW file is a sequential file",
-      "CPF in IN-PUT file must match PEOPLE-RW-CPF key",
-      "WS-PEOPLE-FILE-IN-NAME must be a field in WS-PEOPLE-FILE-IN",
-      "WS-Nome must be large enough to contain the name."
-    ],
-    "annotations": {
-      "comments": null
-    },
-    "code": "END-PERFORM.\n           CLOSE IN-PUT.\n           DISPLAY WS-CPF\n           OPEN I-O PEOPLE-RW\n               MOVE WS-CPF TO PEOPLE-RW-CPF\n               READ PEOPLE-RW into WS-PEOPLE-FILE-IN\n                   KEY IS PEOPLE-RW-CPF\n                   INVALID KEY MOVE \"\" TO WS-Nome\n                  NOT INVALID KEY MOVE WS-PEOPLE-FILE-IN-NAME TO WS-Nome\n               END-READ\n           CLOSE PEOPLE-RW.\n           DISPLAY WS-Nome\n           OPEN EXTEND EXISTS-RW.\n               MOVE WS-Nome TO EXISTS-RW-NAME\n               WRITE EXISTS-RW-FILE"
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\peopleName.cbl",
-    "chunk_id": 2,
-    "language": "COBOL",
-    "feature": "File Closing",
-    "description": "Closes the `EXISTS-RW` file.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [
-      "EXISTS-RW file must be opened."
-    ],
-    "side_effects": [
-      "Closes the EXISTS-RW file."
-    ],
-    "requirements": [
-      "EXISTS-RW file must be opened."
-    ],
-    "annotations": {
-      "comments": null
-    },
-    "code": "END-WRITE.\n           CLOSE EXISTS-RW."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\peopleName.cbl",
-    "chunk_id": 3,
-    "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "Returns control to the calling program or procedure.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [],
-    "side_effects": [
-      "Returns control to the calling routine."
-    ],
-    "requirements": [],
-    "annotations": {
-      "comments": null
-    },
-    "code": "goback."
-  },
-  {
-    "file": "cloned_repos/Cobol-bank-system\\peoplesave.cob",
-    "chunk_id": 1,
-    "language": "COBOL",
-    "feature": "Exit Subroutine",
-    "description": "This code segment represents an exit from a subroutine.",
-    "inputs": [],
-    "outputs": [],
-    "dependencies": [],
-    "side_effects": [
-      "Returns control to the calling program or procedure."
-    ],
-    "requirements": [],
-    "annotations": {
-      "comments": null
+      "comments": "This is a standard way to terminate a COBOL program."
     },
     "code": "goback."
   }
+  
 ]
