@@ -33,7 +33,7 @@ source venv/bin/activate
 ```
 # On Windows:
 ```bash
-.\venv\Scripts\activate
+.\venv410\Scripts\activate
 ```
 
  Install Required Packages
