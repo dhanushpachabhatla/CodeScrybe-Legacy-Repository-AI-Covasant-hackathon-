@@ -1,29 +1,9 @@
 # 🧠 Legacy Code Parser – AI-Powered Chunking Tool
 
-This project extracts semantically meaningful chunks (functions, classes, blocks) from legacy source code for downstream analysis with LLMs.
+This project extracts semantically meaningful chunks (functions, classes, blocks) from legacy source code and provides a user inteface for clients to upload github links and chat about that repo 
 
 ---
 
-## 📁 Project Structure 
-
-Updates so far : 
-
-backend/
-├── agents/
-│ └── chunkers/
-│ ├── regex_chunker.py # Regex-based parser for C/C++/Java/Shell/Perl
-│ ├── sas_cobol_chunkers.py # Specialized block/paragraph chunker for SAS & COBOL
-│
-├── code_parsers.py # Main controller script for parsing source repos
-├── build_treesitter_lib.py # (Optional) AST setup using Tree-sitter (WIP)
-cloned_repos/ # Folder where target repos are cloned
-parsed_output.json # Final output written here
-
-
----
-
-
----
 
 ## ✅ Supported Languages & Methods
 
