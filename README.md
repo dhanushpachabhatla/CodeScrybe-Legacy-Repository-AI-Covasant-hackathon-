@@ -22,24 +22,15 @@ This project extracts semantically meaningful chunks (functions, classes, blocks
 
 > ⚙️ Make sure Python 3.8+ is installed and you're in the project root.
 
-### 1. Create & Activate a Virtual Environment
+### 1. Activate a Virtual Environment
 
-```bash
-python -m venv venv
-```
 # On Unix/macOS:
 ```bash
-source venv/bin/activate
+source venv410/bin/activate
 ```
 # On Windows:
 ```bash
 .\venv410\Scripts\activate
-```
-
- Install Required Packages
-```bash
-pip install gitpython fastapi uvicorn py2neo tree_sitter google-genai
-
 ```
 
 3. Clone a GitHub Repo to Analyze
@@ -62,9 +53,6 @@ List supported files
 Parse code based on language
 Output chunks to parsed_output.json
 
-Problem : i am getting error setting up tree_sitter for ATS parsing for c/c++/java, kinly look into this error if possible my felow team mates
-
-
 5. 🔍 Run NER on Parsed Chunks
    After parsing the code, run the NER module to extract feature-level entities like API usage, user-defined functions, or domain-specific actions:
    before running add a gemini api key in you .env file and then run it
@@ -86,10 +74,11 @@ Inputs/Outputs mentioned in the code
 Entity types (e.g., API names, CPF/SSNs, financial terms)
 This prepares data for the next stage: knowledge graph construction.
 
+📝 Note - Please recheck input and output file name and path before running the individual py program
+
 ⚠️ Known Issue
 We're currently facing an error while setting up Tree-sitter for AST-based parsing of C/C++/Java.
 Fellow teammates are requested to look into this issue in build_treesitter_lib.py if possible.
-
 
 
 
