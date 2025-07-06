@@ -25,5 +25,5 @@ def clone_github_repo(repo_url, destination_folder="cloned_repos"):
 
 # Example usage
 if __name__ == "__main__":
-    repo_url = "https://github.com/id-Software/Quake.git" 
+    repo_url = "https://github.com/alandipert/ncsa-mosaic.git" 
     path = clone_github_repo(repo_url)

@@ -10,9 +10,10 @@ load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=API_KEY)
 
+# INPUT_FILE = "parsed_output.json"
 INPUT_FILE = "parsed_output_cobol_bank_system_repo.json"
-OUTPUT_FILE = "ner_output_cobol_example_1.json"
-CACHE_FILE = "extracted_batch_cache.json"
+OUTPUT_FILE = "new_updated_ner_DOOM.json"
+CACHE_FILE = "newcache_of_updated_ner_DOOM.json"
 
 TOK_LIMIT = 6000  # stay below Gemini 8192
 encoder = tiktoken.encoding_for_model("gpt-3.5-turbo")  # still fine for token counting
@@ -48,13 +49,38 @@ You are an expert software analyst. For each code segment, extract the following
     "language": "...",
     "feature": "...",
     "description": "...",
-    "inputs": [...],
-    "outputs": [...],
-    "dependencies": [...],
-    "side_effects": [...],
-    "requirements": [...],
+    "functions": [
+        {{
+            "name": "...",
+            "signature": "...",
+            "start_line": 0,
+            "end_line": 0,
+            "class": "Optional enclosing class name"
+        }}
+    ],
+    "classes": [
+        {{
+            "name": "...",
+            "parent_class": "...",
+            "methods": ["...", "..."]
+        }}
+    ],
+    "apis": ["API_1", "API_2"],
+    "database_tables": ["table1", "table2"],
+    "inputs": ["..."],
+    "outputs": ["..."],
+    "dependencies": ["..."],
+    "side_effects": ["..."],
+    "requirements": ["..."],
+    "comments": [
+        {{
+            "content": "...",
+            "type": "inline|block|docstring",
+            "line_number": 0
+        }}
+    ],
     "annotations": {{
-      "comments": "..."
+      "developer_notes": "..."
     }}
   }}
 ]
@@ -63,11 +89,6 @@ Code:
 {formatted_chunks}
 """.strip()
 
-# Token-aware batching
-batches = []
-current_batch = []
-global_chunk = next((c for c in chunks if c['chunk_id'] == 0), None)
-
 def clean_json_string(text):
     # Remove markdown-style JSON fencing
     if text.strip().startswith("```"):
@@ -75,23 +96,34 @@ def clean_json_string(text):
         text = re.sub(r"\s*```$", "", text.strip())
     return text
 
+# Token-aware batching
+# Instead of one global chunk, build a mapping: file -> chunk 0
+global_chunks = {c["file"]: c for c in chunks if c["chunk_id"] == 0}
+
+# Token-aware batching
+batches = []
+current_batch = []
+current_file = None
+
 for chunk in chunks:
     if chunk["chunk_id"] == 0:
-        continue
+        continue  # skip global chunks from main list
+
+    # Check if global chunk for this file exists
+    file_global_chunk = global_chunks.get(chunk["file"])
 
     test_batch = current_batch + [chunk]
     code_blob = "\n\n".join([c['code'] for c in test_batch])
-    if global_chunk:
-        code_blob = global_chunk['code'] + "\n\n" + code_blob
+
+    # Include the file's global chunk (if not already included)
+    if file_global_chunk and file_global_chunk not in test_batch:
+        code_blob = file_global_chunk['code'] + "\n\n" + code_blob
 
     token_count = count_tokens(code_blob)
     if token_count > TOK_LIMIT:
         if current_batch:
             batches.append(current_batch)
-            current_batch = [chunk]
-        else:
-            batches.append([chunk])
-            current_batch = []
+        current_batch = [chunk]  # Start new batch
     else:
         current_batch.append(chunk)
 
@@ -99,6 +131,7 @@ if current_batch:
     batches.append(current_batch)
 
 print(f"📦 Total batches prepared: {len(batches)}")
+
 
 # Use gemini-1.5-pro via new SDK
 # model = client.models.get(name = "models/gemini-2.0-flash")
@@ -113,8 +146,9 @@ for i, batch in enumerate(batches):
 
     print(f"🚀 Processing {batch_key}...")
 
-    if global_chunk:
-        batch = [global_chunk] + batch
+    file_global_chunk = global_chunks.get(batch[0]["file"])
+    if file_global_chunk and file_global_chunk not in batch:
+        batch = [file_global_chunk] + batch
 
     prompt = create_prompt(batch)
 

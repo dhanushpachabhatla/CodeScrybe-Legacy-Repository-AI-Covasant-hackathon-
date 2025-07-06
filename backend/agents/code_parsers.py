@@ -94,30 +94,31 @@ def parse_code_files(repo_path):
                         })
 
         except Exception as e:
-            print(f"❌ Error reading {file_path}: {e}")
+            print(f" Error reading {file_path}: {e}")
 
     return parsed_output
 
 if __name__ == "__main__":
-    repo = "cloned_repos/Quake"
+    repo = "cloned_repos/ncsa-mosaic"
+    # repo = "cloned_repos/Quake"
     # repo = "cloned_repos/Cobol-bank-system"
     print(f"🔍 Parsing repo path: {repo}")
     results = parse_code_files(repo)
-    print(f"\n✅ Parsed {len(results)} code chunks from repo")
+    print(f"\n Parsed {len(results)} code chunks from repo")
 
     for r in results[:3]:
         print(f"\n--- {r['file']} [chunk {r['chunk_id']}] ({r['language']}) ---\n{r['code']}\n")
 
     # 🔄 Save to JSON file
-    with open("parsed_output_quake_repo_2.json", "w", encoding="utf-8") as f:
+    with open("parsed_output_ncsa-mosaic.json", "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
-    print("📝 Parsed output written to parsed_output_quake_repo.json")
+    print(" Parsed output written to parsed_output_quake_repo.json")
 
-    # 📊 Chunk count summary
+    #  Chunk count summary
     summary = defaultdict(int)
     for r in results:
         summary[r['file']] += 1
 
-    print("\n📊 Chunk Summary:")
+    print("\n Chunk Summary:")
     for file, count in summary.items():
         print(f"{file} → {count} chunks")
