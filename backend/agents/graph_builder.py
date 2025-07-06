@@ -6,12 +6,11 @@ from neo4j import GraphDatabase
 env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
 load_dotenv(dotenv_path=env_path)
 
-#hulk
+#kylobunn
 NEO4J_URI = os.getenv("NEO4J_URI")
 NEO4J_USER = os.getenv("NEO4J_USERNAME")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
-
-FEATURE_FILE = "cache_of_updated_ner_DOOM_no_batches.json"
+FEATURE_FILE = "pipeline_ner_output.json"
 
 
 class KnowledgeGraphBuilder:

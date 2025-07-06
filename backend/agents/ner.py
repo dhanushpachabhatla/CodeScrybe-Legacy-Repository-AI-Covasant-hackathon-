@@ -11,25 +11,12 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=API_KEY)
 
 # INPUT_FILE = "parsed_output.json"
-INPUT_FILE = "parsed_output_cobol_bank_system_repo.json"
-OUTPUT_FILE = "new_updated_ner_DOOM.json"
-CACHE_FILE = "newcache_of_updated_ner_DOOM.json"
+INPUT_FILE = "pipeline_parsed_code.json"
+OUTPUT_FILE = "pipeline_ner_output.json"
+CACHE_FILE = "pipeline_ner_output_cache.json"
 
 TOK_LIMIT = 6000  # stay below Gemini 8192
 encoder = tiktoken.encoding_for_model("gpt-3.5-turbo")  # still fine for token counting
-
-# Load parsed code chunks
-with open(INPUT_FILE, "r", encoding="utf-8") as f:
-    chunks = json.load(f)
-
-# Load or initialize cache
-if os.path.exists(CACHE_FILE):
-    with open(CACHE_FILE, "r") as f:
-        cache = json.load(f)
-else:
-    cache = {}
-
-results = []
 
 def count_tokens(text):
     return len(encoder.encode(text))
@@ -90,101 +77,105 @@ Code:
 """.strip()
 
 def clean_json_string(text):
-    # Remove markdown-style JSON fencing
     if text.strip().startswith("```"):
         text = re.sub(r"^```(?:json)?\s*", "", text.strip(), flags=re.IGNORECASE)
         text = re.sub(r"\s*```$", "", text.strip())
     return text
 
-# Token-aware batching
-# Instead of one global chunk, build a mapping: file -> chunk 0
-global_chunks = {c["file"]: c for c in chunks if c["chunk_id"] == 0}
+def run_ner_pipeline():
+    # Load parsed code chunks
+    with open(INPUT_FILE, "r", encoding="utf-8") as f:
+        chunks = json.load(f)
 
-# Token-aware batching
-batches = []
-current_batch = []
-current_file = None
-
-for chunk in chunks:
-    if chunk["chunk_id"] == 0:
-        continue  # skip global chunks from main list
-
-    # Check if global chunk for this file exists
-    file_global_chunk = global_chunks.get(chunk["file"])
-
-    test_batch = current_batch + [chunk]
-    code_blob = "\n\n".join([c['code'] for c in test_batch])
-
-    # Include the file's global chunk (if not already included)
-    if file_global_chunk and file_global_chunk not in test_batch:
-        code_blob = file_global_chunk['code'] + "\n\n" + code_blob
-
-    token_count = count_tokens(code_blob)
-    if token_count > TOK_LIMIT:
-        if current_batch:
-            batches.append(current_batch)
-        current_batch = [chunk]  # Start new batch
+    # Load or initialize cache
+    if os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "r") as f:
+            cache = json.load(f)
     else:
-        current_batch.append(chunk)
+        cache = {}
 
-if current_batch:
-    batches.append(current_batch)
+    results = []
 
-print(f"📦 Total batches prepared: {len(batches)}")
+    # Build file -> chunk 0 map
+    global_chunks = {c["file"]: c for c in chunks if c["chunk_id"] == 0}
 
+    # Token-aware batching
+    batches = []
+    current_batch = []
 
-# Use gemini-1.5-pro via new SDK
-# model = client.models.get(name = "models/gemini-2.0-flash")
+    for chunk in chunks:
+        if chunk["chunk_id"] == 0:
+            continue  # skip global chunks from main list
 
-for i, batch in enumerate(batches):
-    batch_key = f"batch_{i}"
+        file_global_chunk = global_chunks.get(chunk["file"])
+        test_batch = current_batch + [chunk]
+        code_blob = "\n\n".join([c['code'] for c in test_batch])
 
-    if batch_key in cache:
-        print(f"✅ Skipping cached {batch_key}")
-        results.extend(cache[batch_key])
-        continue
+        if file_global_chunk and file_global_chunk not in test_batch:
+            code_blob = file_global_chunk['code'] + "\n\n" + code_blob
 
-    print(f"🚀 Processing {batch_key}...")
+        token_count = count_tokens(code_blob)
+        if token_count > TOK_LIMIT:
+            if current_batch:
+                batches.append(current_batch)
+            current_batch = [chunk]
+        else:
+            current_batch.append(chunk)
 
-    file_global_chunk = global_chunks.get(batch[0]["file"])
-    if file_global_chunk and file_global_chunk not in batch:
-        batch = [file_global_chunk] + batch
+    if current_batch:
+        batches.append(current_batch)
 
-    prompt = create_prompt(batch)
+    print(f"📦 Total batches prepared: {len(batches)}")
 
-    try:
-        response = client.models.generate_content(
-            model = "gemini-2.0-flash",
-            contents=prompt
-        )
-        raw = response.text
-        print(raw)
-        cleaned = clean_json_string(raw)
-        output_json = json.loads(cleaned)
+    # Process batches
+    for i, batch in enumerate(batches):
+        batch_key = f"batch_{i}"
 
-        results.extend(output_json)
+        if batch_key in cache:
+            print(f"✅ Skipping cached {batch_key}")
+            results.extend(cache[batch_key])
+            continue
 
-        for item in output_json:
-            file = item["file"]
-            chunk_id = item["chunk_id"]
-            match = next((c for c in batch if c["file"] == file and c["chunk_id"] == chunk_id), None)
-            if match:
-                item["code"] = match["code"]
-        
+        print(f"🚀 Processing {batch_key}...")
 
-        
-        cache[batch_key] = output_json
+        file_global_chunk = global_chunks.get(batch[0]["file"])
+        if file_global_chunk and file_global_chunk not in batch:
+            batch = [file_global_chunk] + batch
 
-        with open(CACHE_FILE, "w") as f:
-            json.dump(cache, f, indent=2)
+        prompt = create_prompt(batch)
 
-        time.sleep(1.2)  # stay within 60 RPM
-    except Exception as e:
-        print(f"❌ Error in {batch_key}: {e}")
-        continue
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt
+            )
+            raw = response.text
+            cleaned = clean_json_string(raw)
+            output_json = json.loads(cleaned)
+            results.extend(output_json)
 
-# Save final result
-with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-    json.dump(results, f, indent=2)
+            # Merge code back into result
+            for item in output_json:
+                file = item["file"]
+                chunk_id = item["chunk_id"]
+                match = next((c for c in batch if c["file"] == file and c["chunk_id"] == chunk_id), None)
+                if match:
+                    item["code"] = match["code"]
 
-print(f"\n✅ Feature extraction complete. Results saved to {OUTPUT_FILE}")
+            cache[batch_key] = output_json
+            with open(CACHE_FILE, "w") as f:
+                json.dump(cache, f, indent=2)
+
+            time.sleep(1.2)  # stay within 60 RPM
+        except Exception as e:
+            print(f"❌ Error in {batch_key}: {e}")
+            continue
+
+    # Save final result
+    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+        json.dump(results, f, indent=2)
+
+    print(f"\n✅ Feature extraction complete. Results saved to {OUTPUT_FILE}")
+
+if __name__ == "__main__":
+    run_ner_pipeline()

@@ -2,7 +2,6 @@
 import os
 import json
 from collections import defaultdict
-# from backend.agents.chunkers.ast_chunker import chunk_with_ast
 from backend.agents.chunkers.regex_chunker import chunk_with_regex
 from backend.agents.chunkers.sas_cobol_chunkers import chunk_sas_by_block, chunk_cobol_by_paragraph
 
@@ -102,14 +101,14 @@ if __name__ == "__main__":
     repo = "cloned_repos/ncsa-mosaic"
     # repo = "cloned_repos/Quake"
     # repo = "cloned_repos/Cobol-bank-system"
-    print(f"🔍 Parsing repo path: {repo}")
+    print(f" Parsing repo path: {repo}")
     results = parse_code_files(repo)
     print(f"\n Parsed {len(results)} code chunks from repo")
 
     for r in results[:3]:
         print(f"\n--- {r['file']} [chunk {r['chunk_id']}] ({r['language']}) ---\n{r['code']}\n")
 
-    # 🔄 Save to JSON file
+    #  Save to JSON file
     with open("parsed_output_ncsa-mosaic.json", "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)
     print(" Parsed output written to parsed_output_quake_repo.json")
