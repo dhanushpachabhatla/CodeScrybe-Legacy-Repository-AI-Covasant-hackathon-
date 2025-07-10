@@ -67,11 +67,15 @@ if the present venv410 virtual environment is not working (due to frontend integ
 
 6. Start the API server:
    ```bash
-   uvicorn backend.api_server:app --reload
+   uvicorn Server.backend.app:app --reload
+   ```
+   or
+   ```bash
+   python -m Server.backend.app
    ```
 7. Explore API Endpoints
    API Root (Health Check):
-   http://127.0.0.1:8000
+   http://127.0.0.1:8000/health
 ✅ Should return:
 ```bash
 {"message": "🚀 AI Discovery Tool API is running."}
