@@ -2,8 +2,8 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from backend.pipeline import run_pipeline
-from backend.agents.graph_rag import graph_rag
+from Server.backend.pipeline import run_pipeline
+from Server.backend.agents.graph_rag import graph_rag
 
 
 env_path = os.path.join(os.path.dirname(__file__), ".env")

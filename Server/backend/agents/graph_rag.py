@@ -6,8 +6,8 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 from dotenv import load_dotenv
 from google import genai
-from backend.database.models import repository_service
-from backend.database.neo4j_manager import neo4j_manager
+from Server.backend.database.models import repository_service
+from Server.backend.database.neo4j_manager import neo4j_manager
 
 load_dotenv()
 

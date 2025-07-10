@@ -2,10 +2,10 @@ import os
 import json
 from collections import defaultdict
 from dotenv import load_dotenv
-from backend.agents.repo_loader import clone_github_repo
-from backend.agents.code_parsers import parse_code_files
-from backend.agents.ner import run_ner_pipeline
-from backend.database.models import repository_service, graph_service
+from Server.backend.agents.repo_loader import clone_github_repo
+from Server.backend.agents.code_parsers import parse_code_files
+from Server.backend.agents.ner import run_ner_pipeline
+from Server.backend.database.models import repository_service, graph_service
 from urllib.parse import urlparse
 
 # Load environment variables

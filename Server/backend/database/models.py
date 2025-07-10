@@ -256,28 +256,3 @@ class GraphService:
 repository_service = RepositoryService()
 chat_service = ChatService()
 graph_service = GraphService()
-
-# Create indexes for better performance
-def create_indexes():
-    """Create database indexes"""
-    try:
-        # Repository indexes
-        repositories_collection.create_index("url", unique=True)
-        repositories_collection.create_index("created_at")
-        repositories_collection.create_index("status")
-        
-        # Chat message indexes
-        chat_messages_collection.create_index("repository_id")
-        chat_messages_collection.create_index("timestamp")
-        chat_messages_collection.create_index([("repository_id", 1), ("timestamp", -1)])
-        
-        # Graph data indexes
-        graph_data_collection.create_index("repository_id")
-        graph_data_collection.create_index("created_at")
-        
-        print("✅ Database indexes created successfully")
-    except Exception as e:
-        print(f"⚠️  Warning: Could not create indexes: {e}")
-
-# Create indexes on import
-create_indexes()

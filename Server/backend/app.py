@@ -7,16 +7,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from bson import ObjectId
 from dotenv import load_dotenv
-from backend.agents.repo_loader import is_valid_github_repo
+from Server.backend.agents.repo_loader import is_valid_github_repo
 
 # Import our database models and services
-from backend.database.models import (
+from Server.backend.database.models import (
     Repository, ChatMessage, RepositoryStatus, MessageType,
     repository_service, chat_service, graph_service
 )
-from backend.database.neo4j_manager import neo4j_manager
-from backend.pipeline import run_pipeline
-from backend.agents.graph_rag import enhanced_graph_rag
+from Server.backend.database.neo4j_manager import neo4j_manager
+from Server.backend.pipeline import run_pipeline
+from Server.backend.agents.graph_rag import enhanced_graph_rag
 
 load_dotenv()
 
@@ -455,7 +455,7 @@ def get_graph_insights(repo_id: str):
             raise HTTPException(status_code=404, detail="Repository not found")
         
         # Import here to avoid circular import
-        from backend.agents.graph_rag import get_graph_insights
+        from Server.backend.agents.graph_rag import get_graph_insights
         
         insights = get_graph_insights(repo_id)
         

@@ -1,9 +1,9 @@
-# python -m backend.agents.code_parsers
+# python -m Server.backend.agents.code_parsers
 import os
 import json
 from collections import defaultdict
-from backend.agents.chunkers.regex_chunker import chunk_with_regex
-from backend.agents.chunkers.sas_cobol_chunkers import chunk_sas_by_block, chunk_cobol_by_paragraph
+from Server.backend.agents.chunkers.regex_chunker import chunk_with_regex
+from Server.backend.agents.chunkers.sas_cobol_chunkers import chunk_sas_by_block, chunk_cobol_by_paragraph
 
 # Supported legacy and target languages
 SUPPORTED_EXTENSIONS = [
