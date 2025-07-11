@@ -84,18 +84,7 @@ gcloud services enable containerregistry.googleapis.com
 gcloud services list --enabled | grep -E "(run|cloudbuild|containerregistry)"
 ```
 
-### 2. Set Environment Variables
-
-```bash
-# Replace with your actual GCP project ID
-export PROJECT_ID="your-project-id"
-export REGION="asia-south1"  # Choose your preferred region
-
-# Verify project ID
-echo $PROJECT_ID
-```
-
-### 3. Create .dockerignore (in root directory)
+### 2. Create .dockerignore (in root directory)
 
 ```dockerignore
 # Backend ignore patterns
@@ -140,7 +129,7 @@ GEMINI_API_KEY="your-gemini-api-key"
 
 ```bash
 # Ensure you're in the root directory of your project
-cd /path/to/CodeScrybe-Legacy-Repository-AI
+cd /path/to/repository
 
 # Build the Docker image using Cloud Build
 gcloud builds submit --tag gcr.io/$PROJECT_ID/codescrybe-backend .
@@ -151,10 +140,6 @@ gcloud run deploy codescrybe-backend \
   --platform managed \
   --region $REGION \
   --allow-unauthenticated \
-  --port 8080 \
-  --memory 2Gi \
-  --cpu 1 \
-  --timeout 300 \
   --set-env-vars "NEO4J_URI=$NEO4J_URI,NEO4J_USERNAME=$NEO4J_USERNAME,NEO4J_PASSWORD=$NEO4J_PASSWORD,GEMINI_API_KEY=$GEMINI_API_KEY"
 ```
 
@@ -178,82 +163,35 @@ cd Client
 
 Before building, update your React app to use the deployed backend URL:
 
-**Create/Update `Client/src/config.js`:**
+**Create/Update `Client/src/contants.js`:**
 
 ```javascript
-// src/config.js
-const config = {
-  // Use environment variable or fallback to deployed backend URL
-  API_BASE_URL: process.env.REACT_APP_API_URL || 'https://codescrybe-backend-xxxxx-as.a.run.app',
-  
-  // Other configuration options
-  APP_NAME: 'CodeScrybe',
-  VERSION: '1.0.0'
-};
-
-export default config;
+// src/constants.ts
+export const apiUrl =  'https://codescrybe-backend-xxxxx-as.a.run.app',
 ```
 
-**Update your API calls to use the config:**
-
-```javascript
-// Example: In your API service files
-import config from './config';
-
-const API_BASE_URL = config.API_BASE_URL;
-
-// Use API_BASE_URL for all API calls
-const fetchRepositories = async () => {
-  const response = await fetch(`${API_BASE_URL}/repositories`);
-  return response.json();
-};
-```
-
-### Step 3: Build and Deploy Frontend
+### Step 2: Build and Deploy Frontend
 
 ```bash
 # Ensure you're in the Client directory
 pwd  # Should show .../CodeScrybe-Legacy-Repository-AI/Client
 
 # Build the Docker image
-gcloud builds submit --tag gcr.io/$PROJECT_ID/codescrybe-client .
+gcloud builds submit --tag gcr.io/$PROJECT_ID/codescrybe .
 
 # Deploy to Cloud Run
-gcloud run deploy codescrybe-client \
-  --image gcr.io/$PROJECT_ID/codescrybe-client \
+gcloud run deploy codescrybe \
+  --image gcr.io/$PROJECT_ID/codescrybe \
   --platform managed \
   --region $REGION \
-  --allow-unauthenticated \
-  --port 8080 \
-  --memory 1Gi \
-  --cpu 1 \
-  --set-env-vars "REACT_APP_API_URL=https://codescrybe-backend-xxxxx-as.a.run.app"
+  --allow-unauthenticated
 ```
 
-### Step 4: Get Frontend URL
+### Step 3: Get Frontend URL
 
 ```bash
 # Get the deployed frontend URL
-gcloud run services describe codescrybe-client --region=$REGION --format="value(status.url)"
-```
-
-## 🔐 Environment Variables & Security
-
-### Using Secret Manager (Recommended for Production)
-
-```bash
-# Create secrets in Secret Manager
-gcloud secrets create neo4j-password --data-file=- <<< "your-neo4j-password"
-gcloud secrets create gemini-api-key --data-file=- <<< "your-gemini-api-key"
-
-# Deploy backend with secrets
-gcloud run deploy codescrybe-backend \
-  --image gcr.io/$PROJECT_ID/codescrybe-backend \
-  --platform managed \
-  --region $REGION \
-  --allow-unauthenticated \
-  --set-env-vars "NEO4J_URI=$NEO4J_URI,NEO4J_USERNAME=$NEO4J_USERNAME" \
-  --set-secrets "NEO4J_PASSWORD=neo4j-password:latest,GEMINI_API_KEY=gemini-api-key:latest"
+gcloud run services describe codescrybe --region=$REGION --format="value(status.url)"
 ```
 
 ### CORS Configuration
@@ -268,7 +206,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # Local development
-        "https://codescrybe-client-xxxxx-as.a.run.app",  # Production frontend
+        "https://codescrybe-xxxxx-as.a.run.app",  # Production frontend
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -292,7 +230,7 @@ curl https://codescrybe-backend-xxxxx-as.a.run.app/health
 
 ```bash
 # Visit your frontend URL
-# https://codescrybe-client-xxxxx-as.a.run.app
+# https://codescrybe-xxxxx-as.a.run.app
 ```
 
 ### 3. Test Full Integration
@@ -321,7 +259,7 @@ gcloud builds log BUILD_ID
 ```bash
 # Check service logs
 gcloud run services logs codescrybe-backend --region=$REGION --limit=50
-gcloud run services logs codescrybe-client --region=$REGION --limit=50
+gcloud run services logs codescrybe --region=$REGION --limit=50
 ```
 
 **3. Connection Issues**
@@ -372,7 +310,7 @@ After successful deployment, you'll have:
 | Component | URL Format | Purpose |
 |-----------|------------|---------|
 | Backend API | `https://codescrybe-backend-xxxxx-as.a.run.app` | FastAPI server with endpoints |
-| Frontend UI | `https://codescrybe-client-xxxxx-as.a.run.app` | React web application |
+| Frontend UI | `https://codescrybe-xxxxx-as.a.run.app` | React web application |
 | API Docs | `https://codescrybe-backend-xxxxx-as.a.run.app/docs` | Interactive API documentation |
 
 ## 📝 Quick Reference Commands
@@ -385,15 +323,15 @@ gcloud run deploy codescrybe-backend --image gcr.io/$PROJECT_ID/codescrybe-backe
 
 # Deploy frontend from Client directory
 cd Client
-gcloud builds submit --tag gcr.io/$PROJECT_ID/codescrybe-client .
-gcloud run deploy codescrybe-client --image gcr.io/$PROJECT_ID/codescrybe-client --region=$REGION --allow-unauthenticated
+gcloud builds submit --tag gcr.io/$PROJECT_ID/codescrybe .
+gcloud run deploy codescrybe --image gcr.io/$PROJECT_ID/codescrybe --region=$REGION --allow-unauthenticated
 
 # Check service status
 gcloud run services list --region=$REGION
 
 # View logs
 gcloud run services logs codescrybe-backend --region=$REGION
-gcloud run services logs codescrybe-client --region=$REGION
+gcloud run services logs codescrybe --region=$REGION
 ```
 
 ## 🎉 Success!
