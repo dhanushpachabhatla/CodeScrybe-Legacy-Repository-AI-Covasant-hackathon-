@@ -145,7 +145,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
     if (!activeRepo?.id || !message.trim()) return;
     
     try {
-      const response = await fetch('http://localhost:8000/chat', {
+      const response = await fetch(`${apiUrl}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
