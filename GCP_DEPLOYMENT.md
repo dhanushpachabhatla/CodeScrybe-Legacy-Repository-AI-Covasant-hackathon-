@@ -183,7 +183,7 @@ Add these to your environment variables:
 ```bash
 # MongoDB Atlas Configuration
 MONGODB_URI="mongodb+srv://codescrybe-user:<password>@cluster.xxxxx.mongodb.net/codescrybe?retryWrites=true&w=majority"
-MONGODB_DB_NAME="codescrybe"
+DATABASE_NAME="codescrybe"
 ```
 
 ## 🐳 Backend Deployment (FastAPI)
@@ -199,7 +199,7 @@ NEO4J_USERNAME="neo4j"
 NEO4J_PASSWORD="your-password"
 GEMINI_API_KEY="your-gemini-api-key"
 MONGODB_URI="mongodb+srv://codescrybe-user:<password>@cluster.xxxxx.mongodb.net/codescrybe?retryWrites=true&w=majority"
-MONGODB_DB_NAME="codescrybe"
+DATABASE_NAME="codescrybe"
 ```
 
 ### Step 2: Update Backend Code for MongoDB
