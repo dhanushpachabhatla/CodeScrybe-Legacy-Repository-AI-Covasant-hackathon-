@@ -36,49 +36,158 @@ const ChatScreen = ({ activeRepo, onBack }) => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Format message content with markdown-like syntax
+  // Format message content with advanced markdown-like syntax
   const formatMessageContent = (content) => {
     if (!content) return '';
     
-    // Split by newlines to preserve paragraph structure
-    const paragraphs = content.split('\n\n');
+    // Split content into sections while preserving structure
+    const sections = content.split(/\n\n+/);
     
-    return paragraphs.map((paragraph, pIndex) => {
-      // Handle lists
-      if (paragraph.includes('•') || paragraph.includes('*') || paragraph.includes('-')) {
-        const items = paragraph.split('\n').filter(line => line.trim());
-        const listItems = items.map((item, index) => {
-          if (item.match(/^[•*-]\s/)) {
-            let formatted = item.replace(/^[•*-]\s/, '');
-            formatted = formatInlineText(formatted);
-            return <li key={index} className="ml-4">{formatted}</li>;
+    return sections.map((section, sIndex) => {
+      // Handle code blocks first (triple backticks)
+      if (section.includes('```')) {
+        const parts = section.split(/```(\w*)\n?/);
+        const elements = [];
+        
+        for (let i = 0; i < parts.length; i++) {
+          if (i % 3 === 0) {
+            // Regular content
+            if (parts[i].trim()) {
+              elements.push(
+                <div key={`text-${i}`} className="mb-2">
+                  {formatInlineText(parts[i])}
+                </div>
+              );
+            }
+          } else if (i % 3 === 1) {
+            // Language identifier
+            continue;
+          } else if (i % 3 === 2) {
+            // Code block content
+            const language = parts[i - 1] || '';
+            const code = parts[i];
+            elements.push(
+              <div key={`code-${i}`} className="relative group mb-4">
+                <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-t-lg border-b border-gray-200 dark:border-gray-700">
+                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">
+                    {language || 'code'}
+                  </span>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(code)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                    title="Copy code"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+                <pre className="bg-gray-50 dark:bg-gray-900 p-4 rounded-b-lg overflow-x-auto text-sm border border-gray-200 dark:border-gray-700 border-t-0">
+                  <code className="text-gray-800 dark:text-gray-200 font-mono">{code}</code>
+                </pre>
+              </div>
+            );
           }
-          return <div key={index}>{formatInlineText(item)}</div>;
-        });
-        return <ul key={pIndex} className="list-disc mb-3">{listItems}</ul>;
-      }
-      
-      // Handle code blocks
-      if (paragraph.includes('```')) {
-        const parts = paragraph.split('```');
+        }
+        
         return (
-          <div key={pIndex} className="mb-3">
-            {parts.map((part, index) => {
-              if (index % 2 === 1) {
-                return (
-                  <pre key={index} className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg text-sm overflow-x-auto my-2">
-                    <code>{part}</code>
-                  </pre>
-                );
-              }
-              return formatInlineText(part);
-            })}
+          <div key={sIndex} className="mb-4">
+            {elements}
           </div>
         );
       }
       
-      // Regular paragraphs
-      return <p key={pIndex} className="mb-3 last:mb-0">{formatInlineText(paragraph)}</p>;
+      // Handle bullet lists with better styling
+      if (section.match(/^[\s]*[•*-]\s/m)) {
+        const items = section.split('\n').filter(line => line.trim());
+        const listItems = items.map((item, index) => {
+          if (item.match(/^[\s]*[•*-]\s/)) {
+            let formatted = item.replace(/^[\s]*[•*-]\s/, '');
+            const indent = (item.match(/^(\s*)/)?.[1]?.length || 0) / 2;
+            return (
+              <li key={index} className={`flex items-start space-x-2 mb-2 ${indent > 0 ? `ml-${indent * 4}` : ''}`}>
+                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></span>
+                <span className="flex-1">{formatInlineText(formatted)}</span>
+              </li>
+            );
+          }
+          return null;
+        }).filter(Boolean);
+        
+        return (
+          <ul key={sIndex} className="mb-4 space-y-1">
+            {listItems}
+          </ul>
+        );
+      }
+      
+      // Handle numbered lists
+      if (section.match(/^\d+\.\s/m)) {
+        const items = section.split('\n').filter(line => line.trim());
+        const listItems = items.map((item, index) => {
+          if (item.match(/^\d+\.\s/)) {
+            let formatted = item.replace(/^\d+\.\s/, '');
+            return (
+              <li key={index} className="flex items-start space-x-3 mb-3">
+                <span className="w-6 h-6 bg-blue-500 text-white text-xs font-bold rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  {index + 1}
+                </span>
+                <span className="flex-1 pt-0.5">{formatInlineText(formatted)}</span>
+              </li>
+            );
+          }
+          return null;
+        }).filter(Boolean);
+        
+        return (
+          <ol key={sIndex} className="mb-4 space-y-2">
+            {listItems}
+          </ol>
+        );
+      }
+      
+      // Handle any section that starts with an emoji and bold text (generic callout boxes)
+      const calloutMatch = section.match(/^([^\s]+)\s*\*\*(.*?)\*\*(.*)/s);
+      if (calloutMatch) {
+        const [, emoji, title, content] = calloutMatch;
+        
+        // Determine color scheme based on emoji or content
+        let colorScheme = 'blue'; // default
+        if (emoji.includes('🔧') || emoji.includes('⚙️')) colorScheme = 'blue';
+        else if (emoji.includes('📊') || emoji.includes('📈')) colorScheme = 'green';
+        else if (emoji.includes('⚠️') || emoji.includes('❌')) colorScheme = 'red';
+        else if (emoji.includes('💡') || emoji.includes('✨')) colorScheme = 'yellow';
+        else if (emoji.includes('🔥') || emoji.includes('⚡')) colorScheme = 'orange';
+        else if (emoji.includes('🎯') || emoji.includes('🎪')) colorScheme = 'purple';
+        
+        const colorMap = {
+          blue: 'from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-100',
+          green: 'from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 text-green-900 dark:text-green-100',
+          red: 'from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border-red-200 dark:border-red-800 text-red-900 dark:text-red-100',
+          yellow: 'from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-900 dark:text-yellow-100',
+          orange: 'from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-orange-200 dark:border-orange-800 text-orange-900 dark:text-orange-100',
+          purple: 'from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-100'
+        };
+        
+        return (
+          <div key={sIndex} className={`mb-4 p-4 bg-gradient-to-r ${colorMap[colorScheme]} rounded-lg border`}>
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">{emoji}</span>
+              <span className="font-bold">{title}</span>
+            </div>
+            {content.trim() && (
+              <div className="text-sm">
+                {formatInlineText(content)}
+              </div>
+            )}
+          </div>
+        );
+      }
+      
+      // Regular paragraphs with better typography
+      return (
+        <div key={sIndex} className="mb-4 leading-relaxed">
+          {formatInlineText(section)}
+        </div>
+      );
     });
   };
 
