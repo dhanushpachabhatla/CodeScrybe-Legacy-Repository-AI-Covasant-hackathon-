@@ -20,12 +20,12 @@ from Server.backend.agents.graph_rag import enhanced_graph_rag
 
 load_dotenv()
 
-app = FastAPI(title="AI Discovery Tool API", version="2.0.0")
+app = FastAPI(title="CodeScrybe - Legacy Repository AI Application API", version="2.0.0")
 
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -127,7 +127,7 @@ async def run_pipeline_async(repo_id: str, repo_url: str):
 
 @app.get("/")
 def root():
-    return {"message": "AI Discovery Tool API v2.0 is running"}
+    return {"message": "CodeScrybe Application API v2.0 is running"}
 
 @app.post("/repositories", response_model=dict)
 async def create_repository(req: RepoRequest, background_tasks: BackgroundTasks):
@@ -489,7 +489,7 @@ def health_check():
 @app.on_event("startup")
 async def startup_event():
     """Test database connections on startup"""
-    print("🚀 Starting AI Discovery Tool API v2.0...")
+    print("🚀 Starting CodeScrybe Application API v2.0...")
     
     # Test Neo4j connection
     try:
@@ -505,7 +505,7 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown"""
-    print("🔄 Shutting down AI Discovery Tool API...")
+    print("🔄 Shutting down CodeScrybe Application API...")
     neo4j_manager.close()
     print("✅ Neo4j connection closed")
 

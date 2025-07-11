@@ -24,6 +24,7 @@ import {
   Trash2,
   AlertCircle
 } from 'lucide-react';
+import { apiUrl } from '../constants.ts';
 
 const ChatScreen = ({ activeRepo, onBack }) => {
   const [chatMessages, setChatMessages] = useState([]);
@@ -107,7 +108,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
     
     try {
       setIsLoading(true);
-      const response = await fetch(`http://localhost:8000/repositories/${activeRepo.id}/chat`);
+      const response = await fetch(`${apiUrl}/repositories/${activeRepo.id}/chat`);
       if (response.ok) {
         const data = await response.json();
         setChatMessages(data.messages || []);
@@ -126,7 +127,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
     if (!activeRepo?.id) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/repositories/${activeRepo.id}/chat`, {
+      const response = await fetch(`${apiUrl}/repositories/${activeRepo.id}/chat`, {
         method: 'DELETE'
       });
       if (response.ok) {

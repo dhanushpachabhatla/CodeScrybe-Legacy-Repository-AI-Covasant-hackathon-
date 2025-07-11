@@ -12,6 +12,7 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
+import { apiUrl } from '../constants.ts';
 
 const RepositorySetupScreen = ({ onBack, onRepositoryAdded }) => {
   const [repoUrl, setRepoUrl] = useState('');
@@ -28,7 +29,7 @@ const RepositorySetupScreen = ({ onBack, onRepositoryAdded }) => {
     setStatusMessage('');
 
     try {
-      const response = await fetch('http://localhost:8000/repositories', {
+      const response = await fetch(`${apiUrl}/repositories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

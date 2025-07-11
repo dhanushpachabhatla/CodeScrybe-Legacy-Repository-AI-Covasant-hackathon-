@@ -41,6 +41,7 @@ import {
   TrendingUp,
   X
 } from 'lucide-react';
+import { apiUrl } from '../../constants.ts';
 
 // Enhanced Sidebar Component with API Integration
 const EnhancedSidebar = forwardRef(({
@@ -72,7 +73,7 @@ const EnhancedSidebar = forwardRef(({
   const fetchRepositories = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8000/repositories');
+      const response = await fetch(`${apiUrl}/repositories`);
       if (!response.ok) throw new Error('Failed to fetch repositories');
       const data = await response.json();
 
@@ -109,7 +110,7 @@ const EnhancedSidebar = forwardRef(({
     const states = {};
     for (const repo of repos) {
       try {
-        const response = await fetch(`http://localhost:8000/repositories/${repo.id}/graph-status`);
+        const response = await fetch(`${apiUrl}/repositories/${repo.id}/graph-status`);
         if (response.ok) {
           const data = await response.json();
           states[repo.id] = data;
@@ -130,7 +131,7 @@ const EnhancedSidebar = forwardRef(({
 
     try {
       setLoadingStates(prev => ({ ...prev, [repoId]: 'deleting' }));
-      const response = await fetch(`http://localhost:8000/repositories/${repoId}`, {
+      const response = await fetch(`${apiUrl}/repositories/${repoId}`, {
         method: 'DELETE'
       });
 
@@ -159,7 +160,7 @@ const EnhancedSidebar = forwardRef(({
     e.stopPropagation();
     try {
       setLoadingStates(prev => ({ ...prev, [repoId]: 'loading' }));
-      const response = await fetch(`http://localhost:8000/repositories/${repoId}/load-graph`, {
+      const response = await fetch(`${apiUrl}/repositories/${repoId}/load-graph`, {
         method: 'POST'
       });
 
@@ -187,7 +188,7 @@ const EnhancedSidebar = forwardRef(({
     e.stopPropagation();
     try {
       setLoadingStates(prev => ({ ...prev, [repoId]: 'clearing' }));
-      const response = await fetch(`http://localhost:8000/repositories/${repoId}/clear-graph`, {
+      const response = await fetch(`${apiUrl}/repositories/${repoId}/clear-graph`, {
         method: 'POST'
       });
 
@@ -217,7 +218,7 @@ const EnhancedSidebar = forwardRef(({
       setInsightsLoading(true);
       setShowInsights(repoId);
 
-      const response = await fetch(`http://localhost:8000/repositories/${repoId}/graph-insights`);
+      const response = await fetch(`${apiUrl}/repositories/${repoId}/graph-insights`);
       if (!response.ok) throw new Error('Failed to fetch insights');
 
       const data = await response.json();

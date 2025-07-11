@@ -12,7 +12,7 @@ load_dotenv()
 
 # MongoDB Connection
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017/")
-DATABASE_NAME = os.getenv("DATABASE_NAME", "ai_discovery_tool")
+DATABASE_NAME = os.getenv("DATABASE_NAME", "CodeScrybe")
 
 client = MongoClient(MONGODB_URI)
 db = client[DATABASE_NAME]

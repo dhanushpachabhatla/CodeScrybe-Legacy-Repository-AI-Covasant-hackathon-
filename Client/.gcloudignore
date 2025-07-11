@@ -1,0 +1,33 @@
+# .gcloudignore for React.js
+
+# Dependency directories
+node_modules/
+.bazel/
+
+# Build artifacts
+build/
+dist/
+
+# OS/system files
+.DS_Store
+Thumbs.db
+
+# Logs and debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.*
+
+# Git
+.git/
+.gitignore
+
+# GCP
+.gcloudignore
+
+# Misc
+*.swp
+*.swo
