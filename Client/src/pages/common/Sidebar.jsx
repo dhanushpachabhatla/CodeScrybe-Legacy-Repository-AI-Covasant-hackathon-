@@ -84,6 +84,7 @@ const EnhancedSidebar = forwardRef(({
         description: repo.description,
         language: repo.language,
         status: repo.status,
+        status_data: repo.status_data,
         messageCount: repo.message_count,
         stars: repo.stars,
         lastAnalyzed: formatDate(repo.last_analyzed),

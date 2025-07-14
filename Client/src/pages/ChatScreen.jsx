@@ -1,18 +1,18 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Code, 
-  Zap, 
-  Network, 
-  Download, 
-  Share, 
-  MoreVertical, 
-  MessageCircle, 
-  Send, 
-  Paperclip, 
-  BarChart3, 
-  Copy, 
-  ThumbsUp, 
-  ThumbsDown, 
+import {
+  Code,
+  Zap,
+  Network,
+  Download,
+  Share,
+  MoreVertical,
+  MessageCircle,
+  Send,
+  Paperclip,
+  BarChart3,
+  Copy,
+  ThumbsUp,
+  ThumbsDown,
   FileText,
   Shield,
   Layers,
@@ -22,7 +22,17 @@ import {
   Image,
   Loader2,
   Trash2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Activity,
+  Timer,
+  Database,
+  FileIcon,
+  TrendingUp,
+  Eye
 } from 'lucide-react';
 import { apiUrl } from '../constants.ts';
 
@@ -33,22 +43,25 @@ const ChatScreen = ({ activeRepo, onBack }) => {
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statusData, setStatusData] = useState(null);
+  const [isStatusLoading, setIsStatusLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const [statusPollingInterval, setStatusPollingInterval] = useState(null);
 
   // Format message content with advanced markdown-like syntax
   const formatMessageContent = (content) => {
     if (!content) return '';
-    
+
     // Split content into sections while preserving structure
     const sections = content.split(/\n\n+/);
-    
+
     return sections.map((section, sIndex) => {
       // Handle code blocks first (triple backticks)
       if (section.includes('```')) {
         const parts = section.split(/```(\w*)\n?/);
         const elements = [];
-        
+
         for (let i = 0; i < parts.length; i++) {
           if (i % 3 === 0) {
             // Regular content
@@ -87,14 +100,14 @@ const ChatScreen = ({ activeRepo, onBack }) => {
             );
           }
         }
-        
+
         return (
           <div key={sIndex} className="mb-4">
             {elements}
           </div>
         );
       }
-      
+
       // Handle bullet lists with better styling
       if (section.match(/^[\s]*[•*-]\s/m)) {
         const items = section.split('\n').filter(line => line.trim());
@@ -111,14 +124,14 @@ const ChatScreen = ({ activeRepo, onBack }) => {
           }
           return null;
         }).filter(Boolean);
-        
+
         return (
           <ul key={sIndex} className="mb-4 space-y-1">
             {listItems}
           </ul>
         );
       }
-      
+
       // Handle numbered lists
       if (section.match(/^\d+\.\s/m)) {
         const items = section.split('\n').filter(line => line.trim());
@@ -136,19 +149,19 @@ const ChatScreen = ({ activeRepo, onBack }) => {
           }
           return null;
         }).filter(Boolean);
-        
+
         return (
           <ol key={sIndex} className="mb-4 space-y-2">
             {listItems}
           </ol>
         );
       }
-      
+
       // Handle any section that starts with an emoji and bold text (generic callout boxes)
       const calloutMatch = section.match(/^([^\s]+)\s*\*\*(.*?)\*\*(.*)/s);
       if (calloutMatch) {
         const [, emoji, title, content] = calloutMatch;
-        
+
         // Determine color scheme based on emoji or content
         let colorScheme = 'blue'; // default
         if (emoji.includes('🔧') || emoji.includes('⚙️')) colorScheme = 'blue';
@@ -157,7 +170,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
         else if (emoji.includes('💡') || emoji.includes('✨')) colorScheme = 'yellow';
         else if (emoji.includes('🔥') || emoji.includes('⚡')) colorScheme = 'orange';
         else if (emoji.includes('🎯') || emoji.includes('🎪')) colorScheme = 'purple';
-        
+
         const colorMap = {
           blue: 'from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-100',
           green: 'from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800 text-green-900 dark:text-green-100',
@@ -166,7 +179,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
           orange: 'from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border-orange-200 dark:border-orange-800 text-orange-900 dark:text-orange-100',
           purple: 'from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-800 text-purple-900 dark:text-purple-100'
         };
-        
+
         return (
           <div key={sIndex} className={`mb-4 p-4 bg-gradient-to-r ${colorMap[colorScheme]} rounded-lg border`}>
             <div className="flex items-center space-x-2">
@@ -181,7 +194,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
           </div>
         );
       }
-      
+
       // Regular paragraphs with better typography
       return (
         <div key={sIndex} className="mb-4 leading-relaxed">
@@ -193,28 +206,51 @@ const ChatScreen = ({ activeRepo, onBack }) => {
 
   const formatInlineText = (text) => {
     if (!text) return '';
-    
+
     // Handle bold text
     text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    
+
     // Handle italic text
     text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    
+
     // Handle inline code
     text = text.replace(/`(.*?)`/g, '<code class="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm">$1</code>');
-    
+
     // Handle headers
     text = text.replace(/^### (.*$)/gm, '<h3 class="text-lg font-semibold mb-2">$1</h3>');
     text = text.replace(/^## (.*$)/gm, '<h2 class="text-xl font-semibold mb-2">$1</h2>');
     text = text.replace(/^# (.*$)/gm, '<h1 class="text-2xl font-bold mb-2">$1</h1>');
-    
+
     return <span dangerouslySetInnerHTML={{ __html: text }} />;
+  };
+
+  // Load repository status
+  const loadRepositoryStatus = async (isPolling = false) => {
+    if (!activeRepo?.id) return;
+
+    try {
+      if (!isPolling) {
+        setIsStatusLoading(true);
+      }
+      const response = await fetch(`${apiUrl}/repositories/${activeRepo.id}/status`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data);
+        setStatusData(data);
+      }
+    } catch (err) {
+      console.error('Error loading repository status:', err);
+    } finally {
+      if (!isPolling) {
+        setIsStatusLoading(false);
+      }
+    }
   };
 
   // Load chat history
   const loadChatHistory = async () => {
     if (!activeRepo?.id) return;
-    
+
     try {
       setIsLoading(true);
       const response = await fetch(`${apiUrl}/repositories/${activeRepo.id}/chat`);
@@ -234,7 +270,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
   // Clear chat history
   const clearChatHistory = async () => {
     if (!activeRepo?.id) return;
-    
+
     try {
       const response = await fetch(`${apiUrl}/repositories/${activeRepo.id}/chat`, {
         method: 'DELETE'
@@ -252,7 +288,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
   // Send message
   const sendMessage = async (message) => {
     if (!activeRepo?.id || !message.trim()) return;
-    
+
     try {
       const response = await fetch(`${apiUrl}/chat`, {
         method: 'POST',
@@ -264,7 +300,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
           repository_id: activeRepo.id
         })
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         return data;
@@ -282,13 +318,96 @@ const ChatScreen = ({ activeRepo, onBack }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const formatDuration = (seconds) => {
+    if (!seconds) return 'N/A';
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
+    if (minutes > 0) return `${minutes}m ${secs}s`;
+    return `${secs}s`;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString.$date || dateString);
+    return date.toLocaleString();
+  };
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return 'text-green-600 dark:text-green-400';
+      case 'processing':
+      case 'analyzing':
+        return 'text-blue-600 dark:text-blue-400';
+      case 'error':
+      case 'failed':
+        return 'text-red-600 dark:text-red-400';
+      default:
+        return 'text-yellow-600 dark:text-yellow-400';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'completed':
+        return <CheckCircle className="w-4 h-4" />;
+      case 'processing':
+      case 'analyzing':
+        return <Activity className="w-4 h-4 animate-pulse" />;
+      case 'error':
+      case 'failed':
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const handleRefresh = () => {
+    loadRepositoryStatus(false); 
+    loadChatHistory();
+  };
+
   useEffect(() => {
+    loadRepositoryStatus();
     loadChatHistory();
   }, [activeRepo?.id]);
 
   useEffect(() => {
     scrollToBottom();
   }, [chatMessages, isTyping]);
+
+  useEffect(() => {
+    // Only start polling if repository is being analyzed (not completed)
+    if (activeRepo?.id && statusData?.current_step !== 'Completed') {
+      const interval = setInterval(() => {
+        loadRepositoryStatus();
+      }, 2000); // Poll every 2 seconds
+
+      setStatusPollingInterval(interval);
+
+      return () => {
+        if (interval) {
+          clearInterval(interval);
+        }
+      };
+    } else {
+      // Clear polling if analysis is completed or no active repo
+      if (statusPollingInterval) {
+        clearInterval(statusPollingInterval);
+        setStatusPollingInterval(null);
+      }
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (statusPollingInterval) {
+        clearInterval(statusPollingInterval);
+      }
+    };
+  }, [activeRepo?.id]);
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() || isTyping) return;
@@ -307,7 +426,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
     setError(null);
 
     const response = await sendMessage(messageInput);
-    
+
     if (response) {
       const aiMessage = {
         id: response.message_id,
@@ -316,7 +435,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
         timestamp: new Date().toISOString(),
         metadata: response.metadata
       };
-      
+
       setChatMessages(prev => [...prev, aiMessage]);
     } else {
       // Add error message
@@ -329,7 +448,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
       };
       setChatMessages(prev => [...prev, errorMessage]);
     }
-    
+
     setIsTyping(false);
   };
 
@@ -342,7 +461,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now - date;
-    
+
     if (diff < 60000) return 'now';
     if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
     if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
@@ -363,13 +482,12 @@ const ChatScreen = ({ activeRepo, onBack }) => {
       <div className={`group max-w-[85%] ${message.type === 'user' ? 'mr-2' : 'ml-2'}`}>
         <div className={`flex items-start space-x-2 ${message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''}`}>
           {/* Avatar */}
-          <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-            message.type === 'user' 
-              ? 'bg-gradient-to-r from-blue-500 to-purple-600' 
+          <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${message.type === 'user'
+              ? 'bg-gradient-to-r from-blue-500 to-purple-600'
               : message.isError
-              ? 'bg-gradient-to-r from-red-500 to-orange-600'
-              : 'bg-gradient-to-r from-emerald-500 to-teal-600'
-          }`}>
+                ? 'bg-gradient-to-r from-red-500 to-orange-600'
+                : 'bg-gradient-to-r from-emerald-500 to-teal-600'
+            }`}>
             {message.type === 'user' ? (
               <User className="w-4 h-4 text-white" />
             ) : message.isError ? (
@@ -378,16 +496,15 @@ const ChatScreen = ({ activeRepo, onBack }) => {
               <Bot className="w-4 h-4 text-white" />
             )}
           </div>
-          
+
           {/* Message Content */}
           <div className="flex-1 min-w-0">
-            <div className={`relative ${
-              message.type === 'user'
+            <div className={`relative ${message.type === 'user'
                 ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl rounded-br-md'
                 : message.isError
-                ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-2xl rounded-bl-md border border-red-200 dark:border-red-800'
-                : 'bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white rounded-2xl rounded-bl-md border border-gray-200/50 dark:border-gray-700/50'
-            } px-4 py-3 shadow-lg`}>
+                  ? 'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-2xl rounded-bl-md border border-red-200 dark:border-red-800'
+                  : 'bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm text-gray-900 dark:text-white rounded-2xl rounded-bl-md border border-gray-200/50 dark:border-gray-700/50'
+              } px-4 py-3 shadow-lg`}>
               <div className="text-sm leading-relaxed">
                 {message.type === 'user' ? (
                   <div className="whitespace-pre-wrap">{message.content}</div>
@@ -397,7 +514,7 @@ const ChatScreen = ({ activeRepo, onBack }) => {
                   </div>
                 )}
               </div>
-              
+
               {/* Metadata for AI messages */}
               {message.type === 'assistant' && message.metadata && !message.isError && (
                 <div className="mt-3 pt-3 border-t border-gray-200/50 dark:border-gray-700/50">
@@ -418,17 +535,16 @@ const ChatScreen = ({ activeRepo, onBack }) => {
                 </div>
               )}
             </div>
-            
+
             {/* Message Actions */}
-            <div className={`flex items-center mt-2 space-x-2 opacity-0 group-hover:opacity-100 transition-opacity ${
-              message.type === 'user' ? 'justify-end' : 'justify-start'
-            }`}>
+            <div className={`flex items-center mt-2 space-x-2 opacity-0 group-hover:opacity-100 transition-opacity ${message.type === 'user' ? 'justify-end' : 'justify-start'
+              }`}>
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 {formatTimestamp(message.timestamp)}
               </span>
               {message.type === 'assistant' && !message.isError && (
                 <div className="flex items-center space-x-1">
-                  <button 
+                  <button
                     onClick={() => navigator.clipboard.writeText(message.content)}
                     className="p-1 rounded-lg hover:bg-gray-100/70 dark:hover:bg-gray-800/70 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                   >
@@ -449,6 +565,189 @@ const ChatScreen = ({ activeRepo, onBack }) => {
     </div>
   );
 
+  const StatusPanel = () => {
+    if (!statusData || statusData.current_step === 'Completed') return null;
+
+    return (
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
+              {getStatusIcon(statusData.current_step)}
+              <h3 className="font-semibold text-gray-900 dark:text-white">
+                Analysis in Progress
+              </h3>
+            </div>
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(statusData.current_step)}`}>
+              Step {statusData.completed_steps} of {statusData.total_steps}
+            </div>
+          </div>
+          <button
+            onClick={handleRefresh}
+            className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+            disabled={isStatusLoading}
+          >
+            <RefreshCw className={`w-4 h-4 ${isStatusLoading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {statusData.current_operation}
+            </span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {statusData.progress_percentage}%
+            </span>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+            <div
+              className="bg-gradient-to-r from-blue-500 to-purple-600 h-2.5 rounded-full transition-all duration-300"
+              style={{ width: `${statusData.progress_percentage}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Status Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg p-3">
+            <div className="flex items-center space-x-2">
+              <Eye className="w-4 h-4 text-blue-500" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">Discovered</span>
+            </div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">
+              {statusData.files_discovered}
+            </div>
+          </div>
+
+          <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg p-3">
+            <div className="flex items-center space-x-2">
+              <FileIcon className="w-4 h-4 text-green-500" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">Processed</span>
+            </div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">
+              {statusData.files_processed}
+            </div>
+          </div>
+
+          <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg p-3">
+            <div className="flex items-center space-x-2">
+              <Database className="w-4 h-4 text-purple-500" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">Batches</span>
+            </div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">
+              {statusData.processed_batches}/{statusData.total_batches}
+            </div>
+          </div>
+
+          <div className="bg-white/60 dark:bg-gray-800/60 rounded-lg p-3">
+            <div className="flex items-center space-x-2">
+              <Timer className="w-4 h-4 text-orange-500" />
+              <span className="text-xs text-gray-600 dark:text-gray-400">ETA</span>
+            </div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-white">
+              {formatDuration(statusData.eta_seconds)}
+            </div>
+          </div>
+        </div>
+
+        {/* Timestamps */}
+        <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 mb-3">
+          <span>Started: {formatDate(statusData.start_time)}</span>
+          <span>Last Updated: {formatDate(statusData.last_update)}</span>
+        </div>
+
+        {/* Warnings */}
+        {statusData.warnings && statusData.warnings.length > 0 && (
+          <div className="border-t border-blue-200 dark:border-blue-800 pt-3">
+            <div className="flex items-center space-x-2 mb-2">
+              <AlertTriangle className="w-4 h-4 text-yellow-500" />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Warnings</span>
+            </div>
+            <div className="space-y-1">
+              {statusData.warnings.map((warning, index) => (
+                <div key={index} className="text-sm text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded">
+                  {warning}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Refresh Notice */}
+        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div className="flex items-// Complete the StatusPanel component (this goes after line 473 in your code)
+center space-x-2 text-sm text-blue-700 dark:text-blue-400">
+            <Activity className="w-4 h-4" />
+            <span>Repository analysis is in progress. Click refresh to get the latest status.</span>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Add this right after the StatusPanel component and before the loading check
+  const ProgressDetailsPanel = () => {
+    if (!statusData?.detailed_progress || statusData.current_step === 'Completed') return null;
+
+    return (
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 rounded-lg p-4 mb-4">
+        <div className="flex items-center space-x-2 mb-3">
+          <TrendingUp className="w-4 h-4 text-indigo-500" />
+          <h4 className="font-medium text-gray-900 dark:text-white">Analysis Details</h4>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {statusData.detailed_progress.repo_name && (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Repository</div>
+              <div className="font-medium text-gray-900 dark:text-white">
+                {statusData.detailed_progress.repo_name}
+              </div>
+              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                Primary: {statusData.detailed_progress.primary_language || 'Unknown'}
+              </div>
+            </div>
+          )}
+
+          {statusData.detailed_progress.total_chunks && (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Processing</div>
+              <div className="font-medium text-gray-900 dark:text-white">
+                {statusData.detailed_progress.total_chunks} chunks
+              </div>
+              <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                from {statusData.detailed_progress.total_files || statusData.files_discovered} files
+              </div>
+            </div>
+          )}
+
+          {statusData.detailed_progress.total_processing_time_seconds && (
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+              <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Processing Time</div>
+              <div className="font-medium text-gray-900 dark:text-white">
+                {formatDuration(Math.floor(statusData.detailed_progress.total_processing_time_seconds))}
+              </div>
+            </div>
+          )}
+
+          {statusData.error_count > 0 && (
+            <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-3">
+              <div className="text-xs text-red-500 dark:text-red-400 mb-1">Errors</div>
+              <div className="font-medium text-red-700 dark:text-red-400">
+                {statusData.error_count} errors encountered
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Replace the return statement in your main component with this updated version
+  // (this replaces everything from line 515 onwards)
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -479,16 +778,15 @@ const ChatScreen = ({ activeRepo, onBack }) => {
                 </p>
               </div>
             </div>
-            <div className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center space-x-1.5 ${
-              activeRepo?.status === 'analyzed' 
+            <div className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center space-x-1.5 ${activeRepo?.status === 'analyzed'
                 ? 'bg-emerald-100/80 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
                 : 'bg-amber-100/80 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-            }`}>
+              }`}>
               <Zap className="w-3 h-3" />
               <span className="capitalize">{activeRepo?.status || 'unknown'}</span>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-1">
             <button
               onClick={clearChatHistory}
@@ -526,6 +824,12 @@ const ChatScreen = ({ activeRepo, onBack }) => {
         </div>
       )}
 
+      {/* Status Panel - Only show if analysis is in progress */}
+      <StatusPanel />
+
+      {/* Progress Details Panel */}
+      <ProgressDetailsPanel />
+
       {/* Messages Container */}
       <div className="flex-1 overflow-hidden relative">
         <div className="h-full overflow-y-auto px-4 py-3 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
@@ -539,20 +843,23 @@ const ChatScreen = ({ activeRepo, onBack }) => {
                   Start exploring {activeRepo?.name || 'your repository'}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm mb-6">
-                  Ask questions about the codebase, architecture, or get insights
+                  {statusData?.current_step !== 'Completed'
+                    ? 'Repository analysis is in progress. You can start chatting once it\'s complete.'
+                    : 'Ask questions about the codebase, architecture, or get insights'
+                  }
                 </p>
               </div>
             </div>
           ) : (
             <div className="max-w-4xl mx-auto">
               {chatMessages.map((message, index) => (
-                <MessageBubble 
-                  key={message.id} 
-                  message={message} 
+                <MessageBubble
+                  key={message.id}
+                  message={message}
                   isLast={index === chatMessages.length - 1}
                 />
               ))}
-              
+
               {isTyping && (
                 <div className="flex justify-start mb-3">
                   <div className="flex items-start space-x-2 ml-2">
@@ -578,8 +885,8 @@ const ChatScreen = ({ activeRepo, onBack }) => {
         </div>
       </div>
 
-      {/* Suggestions */}
-      {showSuggestions && chatMessages.length === 0 && (
+      {/* Suggestions - Only show if analysis is completed */}
+      {showSuggestions && chatMessages.length === 0 && statusData?.current_step === 'Completed' && (
         <div className="px-4 py-2 border-t border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-900/50 backdrop-blur-sm">
           <div className="max-w-4xl mx-auto">
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
@@ -604,9 +911,21 @@ const ChatScreen = ({ activeRepo, onBack }) => {
         </div>
       )}
 
-      {/* Input Bar */}
+      {/* Input Bar - Disable if analysis is not completed */}
       <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 p-4">
         <div className="max-w-4xl mx-auto">
+          {statusData?.current_step !== 'Completed' && (
+            <div className="mb-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+              <div className="flex items-center space-x-2 text-amber-700 dark:text-amber-400">
+                <Clock className="w-4 h-4" />
+                <span className="text-sm">
+                  Chat will be available once the repository analysis is complete.
+                  Current step: {statusData?.current_operation || 'Analyzing...'}
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center space-x-3">
             <div className="flex-1 relative">
               <input
@@ -620,20 +939,24 @@ const ChatScreen = ({ activeRepo, onBack }) => {
                     handleSendMessage();
                   }
                 }}
-                placeholder={`Ask about ${activeRepo?.name || 'the repository'}...`}
+                placeholder={
+                  statusData?.current_step !== 'Completed'
+                    ? 'Waiting for analysis to complete...'
+                    : `Ask about ${activeRepo?.name || 'the repository'}...`
+                }
                 className="w-full px-4 py-3 pr-24 bg-gray-50/80 dark:bg-gray-800/80 border border-gray-200/50 dark:border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200"
-                disabled={isTyping}
+                disabled={isTyping || statusData?.current_step !== 'Completed'}
               />
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center space-x-1">
-                <button 
+                <button
                   className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-700/50"
-                  disabled={isTyping}
+                  disabled={isTyping || statusData?.current_step !== 'Completed'}
                 >
                   <Image className="w-4 h-4" />
                 </button>
-                <button 
+                <button
                   className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-700/50"
-                  disabled={isTyping}
+                  disabled={isTyping || statusData?.current_step !== 'Completed'}
                 >
                   <Paperclip className="w-4 h-4" />
                 </button>
@@ -641,12 +964,11 @@ const ChatScreen = ({ activeRepo, onBack }) => {
             </div>
             <button
               onClick={handleSendMessage}
-              disabled={!messageInput.trim() || isTyping}
-              className={`p-3 rounded-xl transition-all duration-200 ${
-                messageInput.trim() && !isTyping
+              disabled={!messageInput.trim() || isTyping || statusData?.current_step !== 'Completed'}
+              className={`p-3 rounded-xl transition-all duration-200 ${messageInput.trim() && !isTyping && statusData?.current_step === 'Completed'
                   ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl hover:scale-105'
                   : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-              }`}
+                }`}
             >
               {isTyping ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -660,5 +982,4 @@ const ChatScreen = ({ activeRepo, onBack }) => {
     </div>
   );
 };
-
 export default ChatScreen;
