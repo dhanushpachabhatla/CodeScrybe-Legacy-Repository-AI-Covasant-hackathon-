@@ -9,6 +9,8 @@ from bson import ObjectId
 from dotenv import load_dotenv
 from Server.backend.agents.repo_loader import is_valid_github_repo
 import logging
+import shutil
+import stat
 # Import our database models and services
 from Server.backend.database.models import (
     Repository, ChatMessage, RepositoryStatus, MessageType,
@@ -481,11 +483,25 @@ def health_check():
         "current_repo_loaded": neo4j_manager.current_repo_id
     }
 
+def remove_readonly(func, path, _):
+    """Clear read-only bit and retry removal."""
+    os.chmod(path, stat.S_IWRITE)
+    func(path)
+
 # Startup event to test connections
 @app.on_event("startup")
 async def startup_event():
-    """Test database connections on startup"""
+    """Test database connections and clean up on startup"""
     print("🚀 Starting CodeScrybe Application API v2.0...")
+
+    # Delete 'cloned_repository' folder if it exists
+    folder_path = os.path.join(os.getcwd(), "cloned_repos")
+    if os.path.exists(folder_path) and os.path.isdir(folder_path):
+        try:
+            shutil.rmtree(folder_path, onerror=remove_readonly)
+            print("🧹 Deleted 'cloned_repository' folder on startup")
+        except Exception as e:
+            print(f"⚠️ Failed to delete 'cloned_repository': {e}")
     
     # Test Neo4j connection
     try:
@@ -495,7 +511,7 @@ async def startup_event():
             print(f"✅ Neo4j connection successful (test value: {test_value})")
     except Exception as e:
         print(f"❌ Neo4j connection failed: {e}")
-    
+
     print("🎯 API is ready to serve requests!")
 
 @app.on_event("shutdown")
