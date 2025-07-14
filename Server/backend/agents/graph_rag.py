@@ -418,7 +418,7 @@ RESPONSE FORMAT:
 - Use markdown formatting for better readability
 - Include code snippets when helpful
 - Mention specific files and locations
-- End with practical next steps or related suggestions
+- End with practical next steps or related suggestions wherever needed
 
 Your response should be informative, professional, and genuinely helpful to someone trying to understand this codebase.
 """

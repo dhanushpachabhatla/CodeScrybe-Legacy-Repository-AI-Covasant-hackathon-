@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from bson import ObjectId
 from dotenv import load_dotenv
 from Server.backend.agents.repo_loader import is_valid_github_repo
-
+import logging
 # Import our database models and services
 from Server.backend.database.models import (
     Repository, ChatMessage, RepositoryStatus, MessageType,
@@ -30,6 +30,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+logger = logging.getLogger(__name__)
 
 # Request/Response models
 class RepoRequest(BaseModel):
@@ -97,7 +99,7 @@ async def run_pipeline_async(repo_id: str, repo_url: str):
     try:
         # Update status to analyzing
         repository_service.update_repository(repo_id, {
-            "status": RepositoryStatus.ANALYZING,
+            "status": RepositoryStatus.PENDING,
             "last_analyzed": datetime.now()
         })
         
@@ -347,13 +349,7 @@ def get_repository_status(repo_id: str):
         if not repo:
             raise HTTPException(status_code=404, detail="Repository not found")
         
-        return {
-            "status": repo.status.value,
-            "files_analyzed": repo.files_analyzed,
-            "total_chunks": repo.total_chunks,
-            "last_analyzed": repo.last_analyzed.isoformat() if repo.last_analyzed else None,
-            "error_message": repo.error_message
-        }
+        return repo.status_data
         
     except HTTPException:
         raise
